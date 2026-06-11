@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, Button, FormActions, FormPanel, PageHeader } from "../components/ui";
 
 function CreateTicket() {
   const navigate = useNavigate();
@@ -49,88 +50,57 @@ function CreateTicket() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Create Ticket</h2>
-        <p className="text-gray-500">Report a new IT support issue</p>
-      </div>
+      <PageHeader
+        eyebrow="New request"
+        title="Create Ticket"
+        description="Report an IT support issue and assign the correct operational priority."
+      />
 
-      <div className="bg-white rounded-xl shadow p-6 max-w-3xl">
-        {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
+      <FormPanel>
+        <Alert message={error} />
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-          <input
-            name="assetId"
-            value={formData.assetId}
-            onChange={handleChange}
-            placeholder="Asset ID e.g. AST-001"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Asset ID">
+            <input name="assetId" value={formData.assetId} onChange={handleChange} placeholder="AST-001" required />
+          </Field>
 
-          <textarea
-            name="issueDescription"
-            value={formData.issueDescription}
-            onChange={handleChange}
-            placeholder="Issue Description"
-            className="border rounded-lg px-4 py-2"
-            rows="4"
-            required
-          />
+          <Field label="Issue Description">
+            <textarea name="issueDescription" value={formData.issueDescription} onChange={handleChange} placeholder="Describe the issue" rows="4" required />
+          </Field>
 
-          <select
-            name="priority"
-            value={formData.priority}
-            onChange={handleChange}
-            className="border rounded-lg px-4 py-2"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
+          <Field label="Priority">
+            <select name="priority" value={formData.priority} onChange={handleChange}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </Field>
 
-          <input
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            placeholder="Department"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Department">
+            <input name="department" value={formData.department} onChange={handleChange} placeholder="Department" required />
+          </Field>
 
-          <textarea
-            name="remarks"
-            value={formData.remarks}
-            onChange={handleChange}
-            placeholder="Remarks"
-            className="border rounded-lg px-4 py-2"
-            rows="3"
-          />
+          <Field label="Remarks">
+            <textarea name="remarks" value={formData.remarks} onChange={handleChange} placeholder="Optional remarks" rows="3" />
+          </Field>
 
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 disabled:bg-blue-400"
-            >
-              {loading ? "Creating..." : "Create Ticket"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/tickets")}
-              className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
+          <FormActions>
+            <Button type="submit" disabled={loading}>{loading ? "Creating..." : "Create Ticket"}</Button>
+            <Button type="button" variant="secondary" onClick={() => navigate("/tickets")}>Cancel</Button>
+          </FormActions>
         </form>
-      </div>
+      </FormPanel>
     </Layout>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div className="field">
+      <label>{label}</label>
+      {children}
+    </div>
   );
 }
 

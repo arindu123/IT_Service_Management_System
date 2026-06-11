@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, Button, FormActions, FormPanel, PageHeader } from "../components/ui";
 
 function AddAsset() {
   const navigate = useNavigate();
@@ -54,123 +55,75 @@ function AddAsset() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Add Asset</h2>
-        <p className="text-gray-500">Register a new IT device or equipment</p>
-      </div>
+      <PageHeader
+        eyebrow="New asset"
+        title="Add Asset"
+        description="Register a new IT device or equipment item in the asset register."
+      />
 
-      <div className="bg-white rounded-xl shadow p-6 max-w-3xl">
-        {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
+      <FormPanel>
+        <Alert message={error} />
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            name="assetId"
-            value={formData.assetId}
-            onChange={handleChange}
-            placeholder="Asset ID"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+        <form onSubmit={handleSubmit} className="form-grid">
+          <Field label="Asset ID">
+            <input name="assetId" value={formData.assetId} onChange={handleChange} placeholder="AST-001" required />
+          </Field>
 
-          <input
-            name="serialNumber"
-            value={formData.serialNumber}
-            onChange={handleChange}
-            placeholder="Serial Number"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Serial Number">
+            <input name="serialNumber" value={formData.serialNumber} onChange={handleChange} placeholder="Serial number" required />
+          </Field>
 
-          <select
-            name="deviceType"
-            value={formData.deviceType}
-            onChange={handleChange}
-            className="border rounded-lg px-4 py-2"
-          >
-            <option value="computer">Computer</option>
-            <option value="laptop">Laptop</option>
-            <option value="printer">Printer</option>
-            <option value="scanner">Scanner</option>
-            <option value="network_device">Network Device</option>
-            <option value="other">Other</option>
-          </select>
+          <Field label="Device Type">
+            <select name="deviceType" value={formData.deviceType} onChange={handleChange}>
+              <option value="computer">Computer</option>
+              <option value="laptop">Laptop</option>
+              <option value="printer">Printer</option>
+              <option value="scanner">Scanner</option>
+              <option value="network_device">Network Device</option>
+              <option value="other">Other</option>
+            </select>
+          </Field>
 
-          <input
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            placeholder="Brand"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Brand">
+            <input name="brand" value={formData.brand} onChange={handleChange} placeholder="Brand" required />
+          </Field>
 
-          <input
-            name="model"
-            value={formData.model}
-            onChange={handleChange}
-            placeholder="Model"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Model">
+            <input name="model" value={formData.model} onChange={handleChange} placeholder="Model" required />
+          </Field>
 
-          <input
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            placeholder="Location"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Location">
+            <input name="location" value={formData.location} onChange={handleChange} placeholder="Location" required />
+          </Field>
 
-          <input
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            placeholder="Department"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Department">
+            <input name="department" value={formData.department} onChange={handleChange} placeholder="Department" required />
+          </Field>
 
-          <input
-            type="date"
-            name="warrantyDate"
-            value={formData.warrantyDate}
-            onChange={handleChange}
-            className="border rounded-lg px-4 py-2"
-          />
+          <Field label="Warranty Date">
+            <input type="date" name="warrantyDate" value={formData.warrantyDate} onChange={handleChange} />
+          </Field>
 
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Notes"
-            className="border rounded-lg px-4 py-2 md:col-span-2"
-          />
+          <Field label="Notes" className="md:col-span-2">
+            <textarea name="notes" value={formData.notes} onChange={handleChange} placeholder="Optional asset notes" />
+          </Field>
 
-          <div className="md:col-span-2 flex gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 disabled:bg-blue-400"
-            >
-              {loading ? "Saving..." : "Save Asset"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/assets")}
-              className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
+          <FormActions>
+            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Asset"}</Button>
+            <Button type="button" variant="secondary" onClick={() => navigate("/assets")}>Cancel</Button>
+          </FormActions>
         </form>
-      </div>
+      </FormPanel>
     </Layout>
+  );
+}
+
+function Field({ label, children, className = "" }) {
+  return (
+    <div className={`field ${className}`.trim()}>
+      <label>{label}</label>
+      {children}
+    </div>
   );
 }
 

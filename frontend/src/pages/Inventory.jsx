@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, Badge, Button, DataTable, EmptyRow, PageHeader } from "../components/ui";
 
 function Inventory() {
   const navigate = useNavigate();
@@ -31,78 +32,52 @@ function Inventory() {
 
   return (
     <Layout>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Inventory</h2>
-          <p className="text-gray-500">Manage spare parts and IT stock</p>
-        </div>
+      <PageHeader
+        eyebrow="Stock control"
+        title="Inventory Management"
+        description="Review spare parts, reorder thresholds, unit cost and stock availability."
+        action={<Button type="button" onClick={() => navigate("/inventory/add")}>Add Item</Button>}
+      />
 
-        <button
-          type="button"
-          onClick={() => navigate("/inventory/add")}
-          className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
-        >
-          Add Item
-        </button>
-      </div>
+      <Alert message={error} />
 
-      {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
+      <DataTable
+        metric={`${items.length} records`}
+        emptyLabel="Inventory Items"
+        emptyMessage="No inventory items found"
+        columns={["Item Name", "Category", "Quantity", "Reorder Level", "Unit Price", "Stock Status"]}
+      >
+        {items.length === 0 ? (
+          <EmptyRow colSpan="6" message="No inventory items found" />
+        ) : (
+          items.map((item) => {
+            const isLowStock = item.quantity <= item.reorderLevel;
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-200">
-            <tr>
-              <th className="p-4">Item Name</th>
-              <th className="p-4">Category</th>
-              <th className="p-4">Quantity</th>
-              <th className="p-4">Reorder Level</th>
-              <th className="p-4">Unit Price</th>
-              <th className="p-4">Stock Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {items.length === 0 && (
-              <tr>
-                <td colSpan="6" className="p-4 text-center text-gray-500">
-                  No inventory items found
+            return (
+              <tr key={item._id} className={isLowStock ? "bg-red-50/50" : ""}>
+                <td className="font-black text-slate-950">{item.itemName}</td>
+                <td>
+                  <Badge tone="slate">{formatLabel(item.category)}</Badge>
+                </td>
+                <td className="font-black text-slate-900">{item.quantity}</td>
+                <td>{item.reorderLevel}</td>
+                <td className="font-bold">Rs. {item.unitPrice?.toFixed(2) || "0.00"}</td>
+                <td>
+                  <Badge tone={isLowStock ? "red" : "green"}>
+                    {isLowStock ? "Low Stock" : "Available"}
+                  </Badge>
                 </td>
               </tr>
-            )}
-
-            {items.map((item) => {
-              const isLowStock = item.quantity <= item.reorderLevel;
-
-              return (
-                <tr key={item._id} className="border-t">
-                  <td className="p-4 font-semibold">{item.itemName}</td>
-                  <td className="p-4">{item.category}</td>
-                  <td className="p-4">{item.quantity}</td>
-                  <td className="p-4">{item.reorderLevel}</td>
-                  <td className="p-4">Rs. {item.unitPrice}</td>
-                  <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        isLowStock
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {isLowStock ? "Low Stock" : "Available"}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+            );
+          })
+        )}
+      </DataTable>
     </Layout>
   );
+}
+
+function formatLabel(value = "") {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default Inventory;

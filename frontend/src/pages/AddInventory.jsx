@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, Button, FormActions, FormPanel, PageHeader } from "../components/ui";
 
 function AddInventory() {
   const navigate = useNavigate();
@@ -52,120 +53,71 @@ function AddInventory() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Add Inventory Item
-        </h2>
-        <p className="text-gray-500">Add spare parts and IT stock items</p>
-      </div>
+      <PageHeader
+        eyebrow="New stock item"
+        title="Add Inventory Item"
+        description="Add spare parts and consumables with reorder thresholds for stock control."
+      />
 
-      <div className="bg-white rounded-xl shadow p-6 max-w-3xl">
-        {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
+      <FormPanel>
+        <Alert message={error} />
 
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <input
-            name="itemName"
-            value={formData.itemName}
-            onChange={handleChange}
-            placeholder="Item Name"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+        <form onSubmit={handleSubmit} className="form-grid">
+          <Field label="Item Name">
+            <input name="itemName" value={formData.itemName} onChange={handleChange} placeholder="Item name" required />
+          </Field>
 
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            className="border rounded-lg px-4 py-2"
-          >
-            <option value="computer_parts">Computer Parts</option>
-            <option value="printer_parts">Printer Parts</option>
-            <option value="network_parts">Network Parts</option>
-            <option value="cables">Cables</option>
-            <option value="accessories">Accessories</option>
-            <option value="other">Other</option>
-          </select>
+          <Field label="Category">
+            <select name="category" value={formData.category} onChange={handleChange}>
+              <option value="computer_parts">Computer Parts</option>
+              <option value="printer_parts">Printer Parts</option>
+              <option value="network_parts">Network Parts</option>
+              <option value="cables">Cables</option>
+              <option value="accessories">Accessories</option>
+              <option value="other">Other</option>
+            </select>
+          </Field>
 
-          <input
-            type="number"
-            name="quantity"
-            value={formData.quantity}
-            onChange={handleChange}
-            placeholder="Quantity"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Quantity">
+            <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="Quantity" required />
+          </Field>
 
-          <input
-            type="number"
-            name="reorderLevel"
-            value={formData.reorderLevel}
-            onChange={handleChange}
-            placeholder="Reorder Level"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Reorder Level">
+            <input type="number" name="reorderLevel" value={formData.reorderLevel} onChange={handleChange} placeholder="Reorder level" required />
+          </Field>
 
-          <input
-            type="number"
-            name="unitPrice"
-            value={formData.unitPrice}
-            onChange={handleChange}
-            placeholder="Unit Price"
-            className="border rounded-lg px-4 py-2"
-          />
+          <Field label="Unit Price">
+            <input type="number" name="unitPrice" value={formData.unitPrice} onChange={handleChange} placeholder="Unit price" />
+          </Field>
 
-          <input
-            name="supplierName"
-            value={formData.supplierName}
-            onChange={handleChange}
-            placeholder="Supplier Name"
-            className="border rounded-lg px-4 py-2"
-          />
+          <Field label="Supplier Name">
+            <input name="supplierName" value={formData.supplierName} onChange={handleChange} placeholder="Supplier name" />
+          </Field>
 
-          <input
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            placeholder="Location"
-            className="border rounded-lg px-4 py-2"
-          />
+          <Field label="Location">
+            <input name="location" value={formData.location} onChange={handleChange} placeholder="Location" />
+          </Field>
 
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Notes"
-            className="border rounded-lg px-4 py-2 md:col-span-2"
-          />
+          <Field label="Notes" className="md:col-span-2">
+            <textarea name="notes" value={formData.notes} onChange={handleChange} placeholder="Optional inventory notes" />
+          </Field>
 
-          <div className="md:col-span-2 flex gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 disabled:bg-blue-400"
-            >
-              {loading ? "Saving..." : "Save Item"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/inventory")}
-              className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
+          <FormActions>
+            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Item"}</Button>
+            <Button type="button" variant="secondary" onClick={() => navigate("/inventory")}>Cancel</Button>
+          </FormActions>
         </form>
-      </div>
+      </FormPanel>
     </Layout>
+  );
+}
+
+function Field({ label, children, className = "" }) {
+  return (
+    <div className={`field ${className}`.trim()}>
+      <label>{label}</label>
+      {children}
+    </div>
   );
 }
 

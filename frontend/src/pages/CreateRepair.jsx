@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, Button, FormActions, FormPanel, PageHeader } from "../components/ui";
 
 function CreateRepair() {
   const navigate = useNavigate();
@@ -68,110 +69,67 @@ function CreateRepair() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Create Repair Record
-        </h2>
-        <p className="text-gray-500">
-          Add diagnosis, replaced parts and repair status
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Repair workflow"
+        title="Create Repair Record"
+        description="Capture diagnosis, repair status and any replaced inventory parts."
+      />
 
-      <div className="bg-white rounded-xl shadow p-6 max-w-3xl">
-        {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
+      <FormPanel>
+        <Alert message={error} />
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-          <input
-            name="ticketId"
-            value={formData.ticketId}
-            onChange={handleChange}
-            placeholder="Ticket ID e.g. TCK-002"
-            className="border rounded-lg px-4 py-2"
-            required
-          />
+          <Field label="Ticket ID">
+            <input name="ticketId" value={formData.ticketId} onChange={handleChange} placeholder="TCK-002" required />
+          </Field>
 
-          <textarea
-            name="diagnosis"
-            value={formData.diagnosis}
-            onChange={handleChange}
-            placeholder="Diagnosis"
-            className="border rounded-lg px-4 py-2"
-            rows="4"
-            required
-          />
+          <Field label="Diagnosis">
+            <textarea name="diagnosis" value={formData.diagnosis} onChange={handleChange} placeholder="Diagnosis" rows="4" required />
+          </Field>
 
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Repair Notes"
-            className="border rounded-lg px-4 py-2"
-            rows="3"
-          />
+          <Field label="Repair Notes">
+            <textarea name="notes" value={formData.notes} onChange={handleChange} placeholder="Optional repair notes" rows="3" />
+          </Field>
 
-          <select
-            name="repairStatus"
-            value={formData.repairStatus}
-            onChange={handleChange}
-            className="border rounded-lg px-4 py-2"
-          >
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="failed">Failed</option>
-          </select>
+          <Field label="Repair Status">
+            <select name="repairStatus" value={formData.repairStatus} onChange={handleChange}>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+            </select>
+          </Field>
 
-          <input
-            type="date"
-            name="completionDate"
-            value={formData.completionDate}
-            onChange={handleChange}
-            className="border rounded-lg px-4 py-2"
-          />
+          <Field label="Completion Date">
+            <input type="date" name="completionDate" value={formData.completionDate} onChange={handleChange} />
+          </Field>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              name="itemName"
-              value={formData.itemName}
-              onChange={handleChange}
-              placeholder="Replaced Part Name"
-              className="border rounded-lg px-4 py-2"
-            />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Field label="Replaced Part Name">
+              <input name="itemName" value={formData.itemName} onChange={handleChange} placeholder="Part name" />
+            </Field>
 
-            <input
-              type="number"
-              name="quantity"
-              value={formData.quantity}
-              onChange={handleChange}
-              placeholder="Quantity"
-              className="border rounded-lg px-4 py-2"
-            />
+            <Field label="Quantity">
+              <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="Quantity" />
+            </Field>
           </div>
 
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 disabled:bg-blue-400"
-            >
-              {loading ? "Saving..." : "Save Repair"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/repairs")}
-              className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-          </div>
+          <FormActions>
+            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Repair"}</Button>
+            <Button type="button" variant="secondary" onClick={() => navigate("/repairs")}>Cancel</Button>
+          </FormActions>
         </form>
-      </div>
+      </FormPanel>
     </Layout>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div className="field">
+      <label>{label}</label>
+      {children}
+    </div>
   );
 }
 

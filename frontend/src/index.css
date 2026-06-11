@@ -1,1 +1,238 @@
 @import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply m-0 bg-slate-100 text-slate-900 antialiased;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100;
+  }
+
+  textarea {
+    @apply min-h-28 resize-y;
+  }
+
+  label {
+    @apply text-sm font-semibold text-slate-700;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0,#f8fafc_32%,#eef2f7_100%)] text-slate-900;
+  }
+
+  .top-ribbon {
+    @apply border-b border-slate-200 bg-white/80 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 backdrop-blur;
+  }
+
+  .app-header {
+    @apply sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur lg:px-8;
+  }
+
+  .brand-mark {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-sm font-black tracking-tight text-white shadow-lg shadow-slate-300;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white;
+  }
+
+  .nav-link-active {
+    @apply bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/30 hover:bg-cyan-300 hover:text-slate-950;
+  }
+
+  .nav-icon {
+    @apply flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-xs font-black;
+  }
+
+  .content-wrap {
+    @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8;
+  }
+
+  .page-header {
+    @apply mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end;
+  }
+
+  .page-eyebrow {
+    @apply mb-2 text-xs font-bold uppercase tracking-[0.18em] text-cyan-700;
+  }
+
+  .page-title {
+    @apply text-2xl font-black tracking-tight text-slate-950 sm:text-3xl;
+  }
+
+  .page-description {
+    @apply mt-2 max-w-2xl text-sm leading-6 text-slate-600;
+  }
+
+  .page-action {
+    @apply shrink-0;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg bg-slate-950 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-100;
+  }
+
+  .alert-danger {
+    @apply mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm;
+  }
+
+  .alert-mark {
+    @apply flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-600 text-xs font-black text-white;
+  }
+
+  .table-shell,
+  .form-panel,
+  .dashboard-panel {
+    @apply overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-200/60;
+  }
+
+  .table-toolbar {
+    @apply flex items-center justify-between border-b border-slate-100 px-5 py-4;
+  }
+
+  .table-label {
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-slate-400;
+  }
+
+  .table-title {
+    @apply mt-1 text-base font-black text-slate-900;
+  }
+
+  .data-table {
+    @apply w-full min-w-[760px] text-left text-sm;
+  }
+
+  .data-table th {
+    @apply bg-slate-50 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-500;
+  }
+
+  .data-table td {
+    @apply px-5 py-4 align-middle text-slate-700;
+  }
+
+  .data-table tbody tr {
+    @apply border-t border-slate-100 transition hover:bg-cyan-50/60;
+  }
+
+  .empty-cell {
+    @apply py-12 text-center text-slate-500;
+  }
+
+  .empty-mark {
+    @apply mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-black text-slate-400;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-black capitalize;
+  }
+
+  .badge-green {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+
+  .badge-red {
+    @apply border-red-200 bg-red-50 text-red-700;
+  }
+
+  .badge-amber {
+    @apply border-amber-200 bg-amber-50 text-amber-700;
+  }
+
+  .badge-blue {
+    @apply border-sky-200 bg-sky-50 text-sky-700;
+  }
+
+  .badge-violet {
+    @apply border-violet-200 bg-violet-50 text-violet-700;
+  }
+
+  .badge-slate {
+    @apply border-slate-200 bg-slate-100 text-slate-700;
+  }
+
+  .stat-card {
+    @apply rounded-lg border bg-white p-5 shadow-xl shadow-slate-200/60 transition hover:-translate-y-1 hover:shadow-2xl;
+  }
+
+  .stat-card p {
+    @apply text-sm font-bold text-slate-500;
+  }
+
+  .stat-value {
+    @apply mt-3 text-4xl font-black tracking-tight text-slate-950;
+  }
+
+  .stat-card span {
+    @apply mt-4 block h-1.5 rounded-full;
+  }
+
+  .stat-blue {
+    @apply border-sky-100;
+  }
+
+  .stat-blue span {
+    @apply bg-sky-400;
+  }
+
+  .stat-green {
+    @apply border-emerald-100;
+  }
+
+  .stat-green span {
+    @apply bg-emerald-400;
+  }
+
+  .stat-amber {
+    @apply border-amber-100;
+  }
+
+  .stat-amber span {
+    @apply bg-amber-400;
+  }
+
+  .stat-red {
+    @apply border-red-100;
+  }
+
+  .stat-red span {
+    @apply bg-red-400;
+  }
+
+  .form-panel {
+    @apply max-w-4xl p-5 sm:p-6;
+  }
+
+  .field {
+    @apply space-y-2;
+  }
+
+  .form-grid {
+    @apply grid grid-cols-1 gap-4 md:grid-cols-2;
+  }
+
+  .form-actions {
+    @apply flex flex-col gap-3 pt-2 sm:flex-row md:col-span-2;
+  }
+
+  .status-list {
+    @apply space-y-3;
+  }
+
+  .status-row {
+    @apply flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-4 py-3;
+  }
+}

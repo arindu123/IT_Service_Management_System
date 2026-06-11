@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, PageHeader, StatCard } from "../components/ui";
 
 function Dashboard() {
   const [summary, setSummary] = useState(null);
@@ -28,79 +29,81 @@ function Dashboard() {
 
   return (
     <Layout>
-      {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
+      <Alert message={error} />
 
       {!summary && !error && (
-        <p className="text-gray-600">Loading dashboard...</p>
+        <div className="dashboard-panel p-8 text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-500" />
+          <p className="font-semibold text-slate-600">Loading dashboard...</p>
+        </div>
       )}
 
       {summary && (
         <>
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Dashboard Summary
-          </h2>
+          <PageHeader
+            eyebrow="Operations overview"
+            title="Dashboard Summary"
+            description="A live view of users, assets, tickets and inventory alerts across GSMB IT services."
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl shadow p-6">
-              <p className="text-gray-500 text-sm">Total Users</p>
-              <h3 className="text-3xl font-bold text-blue-700">
-                {summary.users.total}
-              </h3>
-            </div>
-
-            <div className="bg-white rounded-xl shadow p-6">
-              <p className="text-gray-500 text-sm">Total Assets</p>
-              <h3 className="text-3xl font-bold text-green-700">
-                {summary.assets.total}
-              </h3>
-            </div>
-
-            <div className="bg-white rounded-xl shadow p-6">
-              <p className="text-gray-500 text-sm">Total Tickets</p>
-              <h3 className="text-3xl font-bold text-orange-600">
-                {summary.tickets.total}
-              </h3>
-            </div>
-
-            <div className="bg-white rounded-xl shadow p-6">
-              <p className="text-gray-500 text-sm">Low Stock Items</p>
-              <h3 className="text-3xl font-bold text-red-600">
-                {summary.inventory.lowStockCount}
-              </h3>
-            </div>
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Total Users" value={summary.users.total} tone="blue" meta="Registered accounts" />
+            <StatCard label="Total Assets" value={summary.assets.total} tone="green" meta="Tracked equipment" />
+            <StatCard label="Total Tickets" value={summary.tickets.total} tone="amber" meta="Support requests" />
+            <StatCard label="Low Stock Items" value={summary.inventory.lowStockCount} tone="red" meta="Needs attention" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="font-bold text-gray-800 mb-4">Ticket Status</h3>
-
-              <div className="space-y-2 text-gray-700">
-                <p>Open: {summary.tickets.open}</p>
-                <p>Assigned: {summary.tickets.assigned}</p>
-                <p>In Progress: {summary.tickets.inProgress}</p>
-                <p>Resolved: {summary.tickets.resolved}</p>
-                <p>Closed: {summary.tickets.closed}</p>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="dashboard-panel p-5">
+              <div className="mb-4 border-b border-slate-100 pb-4">
+                <p className="page-eyebrow mb-1">Tickets</p>
+                <h3 className="text-lg font-black text-slate-950">Status Overview</h3>
               </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="font-bold text-gray-800 mb-4">Asset Status</h3>
-
-              <div className="space-y-2 text-gray-700">
-                <p>Active: {summary.assets.active}</p>
-                <p>Under Repair: {summary.assets.underRepair}</p>
-                <p>Damaged: {summary.assets.damaged}</p>
-                <p>Retired: {summary.assets.retired}</p>
+              <div className="status-list">
+                <StatusRow label="Open" value={summary.tickets.open} tone="blue" />
+                <StatusRow label="Assigned" value={summary.tickets.assigned} tone="violet" />
+                <StatusRow label="In Progress" value={summary.tickets.inProgress} tone="amber" />
+                <StatusRow label="Resolved" value={summary.tickets.resolved} tone="green" />
+                <StatusRow label="Closed" value={summary.tickets.closed} tone="slate" />
               </div>
-            </div>
+            </section>
+
+            <section className="dashboard-panel p-5">
+              <div className="mb-4 border-b border-slate-100 pb-4">
+                <p className="page-eyebrow mb-1">Assets</p>
+                <h3 className="text-lg font-black text-slate-950">Lifecycle Overview</h3>
+              </div>
+              <div className="status-list">
+                <StatusRow label="Active" value={summary.assets.active} tone="green" />
+                <StatusRow label="Under Repair" value={summary.assets.underRepair} tone="amber" />
+                <StatusRow label="Damaged" value={summary.assets.damaged} tone="red" />
+                <StatusRow label="Retired" value={summary.assets.retired} tone="slate" />
+              </div>
+            </section>
           </div>
         </>
       )}
     </Layout>
+  );
+}
+
+function StatusRow({ label, value, tone }) {
+  const tones = {
+    blue: "bg-sky-100 text-sky-700",
+    violet: "bg-violet-100 text-violet-700",
+    amber: "bg-amber-100 text-amber-700",
+    green: "bg-emerald-100 text-emerald-700",
+    red: "bg-red-100 text-red-700",
+    slate: "bg-slate-200 text-slate-700",
+  };
+
+  return (
+    <div className="status-row">
+      <span className="font-semibold text-slate-700">{label}</span>
+      <span className={`rounded-full px-3 py-1 text-sm font-black ${tones[tone]}`}>
+        {value}
+      </span>
+    </div>
   );
 }
 

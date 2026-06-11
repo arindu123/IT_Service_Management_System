@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, Badge, Button, DataTable, EmptyRow, PageHeader } from "../components/ui";
 
 function Assets() {
   const navigate = useNavigate();
@@ -31,77 +32,52 @@ function Assets() {
 
   return (
     <Layout>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Assets</h2>
-          <p className="text-gray-500">Manage IT devices and equipment</p>
-        </div>
+      <PageHeader
+        eyebrow="Asset register"
+        title="Assets Management"
+        description="Track devices, ownership context and lifecycle status across departments."
+        action={<Button onClick={() => navigate("/assets/add")}>Add New Asset</Button>}
+      />
 
-        <button
-          onClick={() => navigate("/assets/add")}
-          className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
-        >
-          Add Asset
-        </button>
-      </div>
+      <Alert message={error} />
 
-      {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-200">
-            <tr>
-              <th className="p-4">Asset ID</th>
-              <th className="p-4">Device</th>
-              <th className="p-4">Brand</th>
-              <th className="p-4">Model</th>
-              <th className="p-4">Department</th>
-              <th className="p-4">Status</th>
+      <DataTable
+        metric={`${assets.length} records`}
+        emptyLabel="IT Assets"
+        emptyMessage="No assets found"
+        columns={["Asset ID", "Device Type", "Brand", "Model", "Department", "Status"]}
+      >
+        {assets.length === 0 ? (
+          <EmptyRow colSpan="6" message="No assets found" />
+        ) : (
+          assets.map((asset) => (
+            <tr key={asset._id}>
+              <td className="font-black text-slate-950">{asset.assetId}</td>
+              <td>{formatLabel(asset.deviceType)}</td>
+              <td>{asset.brand}</td>
+              <td>{asset.model}</td>
+              <td>{asset.department}</td>
+              <td>
+                <Badge tone={assetTone(asset.status)}>{formatLabel(asset.status)}</Badge>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {assets.length === 0 && (
-              <tr>
-                <td colSpan="6" className="p-4 text-center text-gray-500">
-                  No assets found
-                </td>
-              </tr>
-            )}
-
-            {assets.map((asset) => (
-              <tr key={asset._id} className="border-t">
-                <td className="p-4 font-semibold">{asset.assetId}</td>
-                <td className="p-4">{asset.deviceType}</td>
-                <td className="p-4">{asset.brand}</td>
-                <td className="p-4">{asset.model}</td>
-                <td className="p-4">{asset.department}</td>
-                <td className="p-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      asset.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : asset.status === "under_repair"
-                        ? "bg-orange-100 text-orange-700"
-                        : asset.status === "damaged"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {asset.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))
+        )}
+      </DataTable>
     </Layout>
   );
+}
+
+function formatLabel(value = "") {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function assetTone(status) {
+  if (status === "active") return "green";
+  if (status === "under_repair") return "amber";
+  if (status === "damaged") return "red";
+  if (status === "retired") return "slate";
+  return "blue";
 }
 
 export default Assets;

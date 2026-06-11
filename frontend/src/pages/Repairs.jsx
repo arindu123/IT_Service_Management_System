@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Alert, Badge, Button, DataTable, EmptyRow, PageHeader } from "../components/ui";
 
 function Repairs() {
   const navigate = useNavigate();
@@ -31,80 +32,84 @@ function Repairs() {
 
   return (
     <Layout>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Repairs</h2>
-          <p className="text-gray-500">View repair and maintenance history</p>
-        </div>
+      <PageHeader
+        eyebrow="Maintenance"
+        title="Repair & Maintenance"
+        description="Review diagnosis notes, technician ownership and repair outcomes."
+        action={<Button type="button" onClick={() => navigate("/repairs/create")}>Add Repair</Button>}
+      />
 
-        <button
-          type="button"
-          onClick={() => navigate("/repairs/create")}
-          className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
-        >
-          Add Repair
-        </button>
-      </div>
+      <Alert message={error} />
 
-      {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-200">
-            <tr>
-              <th className="p-4">Repair ID</th>
-              <th className="p-4">Ticket</th>
-              <th className="p-4">Asset</th>
-              <th className="p-4">Diagnosis</th>
-              <th className="p-4">Technician</th>
-              <th className="p-4">Status</th>
+      <DataTable
+        metric={`${repairs.length} records`}
+        emptyLabel="Repair Records"
+        emptyMessage="No repair records found"
+        columns={["Repair ID", "Ticket", "Asset", "Diagnosis", "Technician", "Status"]}
+      >
+        {repairs.length === 0 ? (
+          <EmptyRow colSpan="6" message="No repair records found" />
+        ) : (
+          repairs.map((repair) => (
+            <tr key={repair._id}>
+              <td className="font-black text-slate-950">{repair.repairId}</td>
+              <td className="font-bold">{repair.ticket?.ticketId || "N/A"}</td>
+              <td>
+                <div className="font-bold text-slate-800">{repair.asset?.assetId || "N/A"}</div>
+                <div className="text-xs text-slate-500">
+                  {repair.asset?.brand} {repair.asset?.model}
+                </div>
+              </td>
+              <td className="max-w-xs">
+                <div className="truncate">{repair.diagnosis || "Not specified"}</div>
+              </td>
+              <td>
+                {repair.technician?.name ? (
+                  <PersonName name={repair.technician.name} />
+                ) : (
+                  <span className="text-slate-400">Not available</span>
+                )}
+              </td>
+              <td>
+                <Badge tone={repairTone(repair.repairStatus)}>
+                  {formatLabel(repair.repairStatus)}
+                </Badge>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {repairs.length === 0 && (
-              <tr>
-                <td colSpan="6" className="p-4 text-center text-gray-500">
-                  No repair records found
-                </td>
-              </tr>
-            )}
-
-            {repairs.map((repair) => (
-              <tr key={repair._id} className="border-t">
-                <td className="p-4 font-semibold">{repair.repairId}</td>
-                <td className="p-4">{repair.ticket?.ticketId}</td>
-                <td className="p-4">
-                  {repair.asset?.assetId} - {repair.asset?.brand}
-                </td>
-                <td className="p-4">{repair.diagnosis}</td>
-                <td className="p-4">
-                  {repair.technician?.name || "Not available"}
-                </td>
-                <td className="p-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      repair.repairStatus === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : repair.repairStatus === "failed"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-orange-100 text-orange-700"
-                    }`}
-                  >
-                    {repair.repairStatus}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))
+        )}
+      </DataTable>
     </Layout>
   );
+}
+
+function PersonName({ name }) {
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-xs font-black text-white">
+        {initials}
+      </span>
+      <span className="font-semibold text-slate-700">{name}</span>
+    </div>
+  );
+}
+
+function formatLabel(value = "") {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function repairTone(status) {
+  if (status === "completed") return "green";
+  if (status === "failed") return "red";
+  if (status === "in_progress") return "amber";
+  return "blue";
 }
 
 export default Repairs;
