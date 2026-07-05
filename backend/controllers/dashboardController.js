@@ -13,10 +13,13 @@ const getDashboardSummary = async (req, res) => {
     const totalRepairs = await Repair.countDocuments();
     const totalInventoryItems = await Inventory.countDocuments();
 
-    const openTickets = await Ticket.countDocuments({ status: "open" });
-    const assignedTickets = await Ticket.countDocuments({ status: "assigned" });
-    const inProgressTickets = await Ticket.countDocuments({ status: "in_progress" });
-    const resolvedTickets = await Ticket.countDocuments({ status: "resolved" });
+    const submittedTickets = await Ticket.countDocuments({ status: { $in: ["submitted", "open"] } });
+    const acknowledgedTickets = await Ticket.countDocuments({ status: "acknowledged" });
+    const underReviewTickets = await Ticket.countDocuments({ status: { $in: ["under_review", "assigned", "in_progress"] } });
+    const procurementTickets = await Ticket.countDocuments({ status: { $in: ["procurement_required", "in_procurement"] } });
+    const itemAvailableTickets = await Ticket.countDocuments({ status: "item_available" });
+    const installationScheduledTickets = await Ticket.countDocuments({ status: "installation_scheduled" });
+    const installedTickets = await Ticket.countDocuments({ status: { $in: ["installed", "resolved"] } });
     const closedTickets = await Ticket.countDocuments({ status: "closed" });
 
     const activeAssets = await Asset.countDocuments({ status: "active" });
@@ -41,11 +44,18 @@ const getDashboardSummary = async (req, res) => {
       },
       tickets: {
         total: totalTickets,
-        open: openTickets,
-        assigned: assignedTickets,
-        inProgress: inProgressTickets,
-        resolved: resolvedTickets,
+        submitted: submittedTickets,
+        acknowledged: acknowledgedTickets,
+        underReview: underReviewTickets,
+        procurement: procurementTickets,
+        itemAvailable: itemAvailableTickets,
+        installationScheduled: installationScheduledTickets,
+        installed: installedTickets,
         closed: closedTickets,
+        open: submittedTickets,
+        assigned: underReviewTickets,
+        inProgress: underReviewTickets,
+        resolved: installedTickets,
       },
       repairs: {
         total: totalRepairs,

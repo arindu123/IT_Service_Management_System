@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    employeeId: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
     password: {
       type: String,
       required: true,
@@ -23,7 +29,16 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["admin", "technician", "department_user", "management"],
+      enum: [
+        "admin",
+        "system_admin",
+        "head_of_it",
+        "technician",
+        "department_user",
+        "store_keeper",
+        "procurement_officer",
+        "management",
+      ],
       default: "department_user",
     },
 
@@ -32,9 +47,21 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    designation: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
     phone: {
       type: String,
       default: "",
+    },
+
+    officeLocation: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   {

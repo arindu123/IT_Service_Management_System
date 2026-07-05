@@ -1,13 +1,17 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
+import MyAccount from "./pages/MyAccount";
 
 import Assets from "./pages/Assets";
 import AddAsset from "./pages/AddAsset";
 
 import Tickets from "./pages/Tickets";
 import CreateTicket from "./pages/CreateTicket";
+import TicketDetail from "./pages/TicketDetail";
 
 import Inventory from "./pages/Inventory";
 import AddInventory from "./pages/AddInventory";
@@ -26,12 +30,31 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      <Route
+        path="/about"
+        element={
+          <ProtectedRoute>
+            <About />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/account"
+        element={
+          <ProtectedRoute>
+            <MyAccount />
           </ProtectedRoute>
         }
       />
@@ -68,6 +91,15 @@ function App() {
         element={
           <ProtectedRoute>
             <CreateTicket />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/tickets/:id"
+        element={
+          <ProtectedRoute>
+            <TicketDetail />
           </ProtectedRoute>
         }
       />

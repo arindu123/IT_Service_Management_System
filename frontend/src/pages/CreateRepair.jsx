@@ -72,14 +72,14 @@ function CreateRepair() {
       <PageHeader
         eyebrow="Repair workflow"
         title="Create Repair Record"
-        description="Capture diagnosis, repair status and any replaced inventory parts."
+        description="Capture technician diagnosis, repair status and any replaced inventory parts."
       />
 
       <FormPanel>
         <Alert message={error} />
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-          <Field label="Ticket ID">
+          <Field label="Hardware Request ID">
             <input name="ticketId" value={formData.ticketId} onChange={handleChange} placeholder="TCK-002" required />
           </Field>
 

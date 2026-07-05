@@ -28,6 +28,12 @@ const createRepair = async (req, res) => {
       });
     }
 
+    if (!ticket.asset) {
+      return res.status(400).json({
+        message: "A linked asset is required before creating a repair record",
+      });
+    }
+
     const repairCount = await Repair.countDocuments();
     const repairId = `REP-${String(repairCount + 1).padStart(3, "0")}`;
 
@@ -44,7 +50,7 @@ const createRepair = async (req, res) => {
     });
 
     await Ticket.findByIdAndUpdate(ticket._id, {
-      status: repairStatus === "completed" ? "resolved" : "in_progress",
+      status: repairStatus === "completed" ? "installed" : "under_review",
       remarks: notes || ticket.remarks,
     });
 

@@ -45,7 +45,7 @@ function Repairs() {
         metric={`${repairs.length} records`}
         emptyLabel="Repair Records"
         emptyMessage="No repair records found"
-        columns={["Repair ID", "Ticket", "Asset", "Diagnosis", "Technician", "Status"]}
+        columns={["Repair ID", "Request", "Asset", "Diagnosis", "Technician", "Status"]}
       >
         {repairs.length === 0 ? (
           <EmptyRow colSpan="6" message="No repair records found" />
