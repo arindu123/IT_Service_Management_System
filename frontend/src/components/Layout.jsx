@@ -3,6 +3,53 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 import { getTicketUpdates, getUnreadTicketUpdates } from "../utils/ticketUpdates";
 
+const icons = {
+  dashboard: (
+    <path d="M4 4h6v6H4V4Zm10 0h6v4h-6V4ZM4 14h6v6H4v-6Zm10-2h6v8h-6v-8Z" />
+  ),
+  account: (
+    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0H5Z" />
+  ),
+  about: (
+    <path d="M11 10h2v7h-2v-7Zm0-4h2v2h-2V6Zm1-4a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z" />
+  ),
+  assets: (
+    <path d="M4 5h16v10H4V5Zm6 12h4v2h4v2H6v-2h4v-2Z" />
+  ),
+  tickets: (
+    <path d="M5 5h14v4a2 2 0 0 0 0 4v4H5v-4a2 2 0 0 0 0-4V5Zm5 3h6v2h-6V8Zm0 4h5v2h-5v-2Z" />
+  ),
+  inventory: (
+    <path d="M4 7 12 3l8 4-8 4-8-4Zm0 3 8 4 8-4v7l-8 4-8-4v-7Z" />
+  ),
+  repairs: (
+    <path d="m14.7 6.3 3-3 3 3-3 3-3-3ZM3 17.6l7.8-7.8 3.4 3.4L6.4 21H3v-3.4Z" />
+  ),
+  users: (
+    <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21a7 7 0 0 1 14 0H2Zm14.5-1a8.8 8.8 0 0 0-2.1-4.9A5.5 5.5 0 0 1 22 20h-5.5Z" />
+  ),
+  menu: (
+    <path d="M4 7h16v2H4V7Zm0 4h16v2H4v-2Zm0 4h16v2H4v-2Z" />
+  ),
+  close: (
+    <path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5Zm11.2 0L19 6.4 6.4 19 5 17.6 17.6 5Z" />
+  ),
+  bell: (
+    <path d="M12 22a2.7 2.7 0 0 0 2.7-2.5H9.3A2.7 2.7 0 0 0 12 22Zm-7-5h14l-1.4-2.3V10a5.6 5.6 0 0 0-4.1-5.4V3a1.5 1.5 0 0 0-3 0v1.6A5.6 5.6 0 0 0 6.4 10v4.7L5 17Z" />
+  ),
+  logout: (
+    <path d="M4 4h8v2H6v12h6v2H4V4Zm11.6 4.4L20.2 13l-4.6 4.6-1.4-1.4 2.2-2.2H9v-2h7.4l-2.2-2.2 1.4-1.4Z" />
+  ),
+};
+
+function Icon({ name, className = "" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      {icons[name]}
+    </svg>
+  );
+}
+
 function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,107 +105,130 @@ function Layout({ children }) {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: "DB" },
-    { path: "/account", label: "My Account", icon: "ME", badge: notificationCount },
-    { path: "/about", label: "About", icon: "AB" },
-    { path: "/assets", label: "Assets", icon: "AS" },
-    { path: "/tickets", label: "Hardware Requests", icon: "HR" },
-    { path: "/inventory", label: "Inventory", icon: "IN" },
-    { path: "/repairs", label: "Repairs", icon: "RP" },
+    { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
+    { path: "/account", label: "My Account", icon: "account", badge: notificationCount },
+    { path: "/about", label: "About", icon: "about" },
+    { path: "/assets", label: "Assets", icon: "assets" },
+    { path: "/tickets", label: "Hardware Requests", icon: "tickets" },
+    { path: "/inventory", label: "Inventory", icon: "inventory" },
+    { path: "/repairs", label: "Repairs", icon: "repairs" },
   ];
+
+  if (user?.role === "admin" || user?.role === "system_admin" || user?.role === "head_of_it") {
+    navItems.push({ path: "/users", label: "User Management", icon: "users" });
+  }
 
   return (
     <div className="app-shell">
-      <div className="top-ribbon">Government IT Helpdesk & Hardware Procurement Portal</div>
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          className="sidebar-scrim"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      <header className="app-header">
-        <div className="flex items-center justify-between gap-4">
+      <aside className={`app-sidebar ${sidebarOpen ? "app-sidebar-open" : ""}`}>
+        <div className="sidebar-brand">
+          <div className="brand-mark">GS</div>
+          <div className="min-w-0">
+            <h1>GSMB Helpdesk</h1>
+            <p>Hardware operations</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="icon-button ml-auto lg:hidden"
+            aria-label="Close navigation"
+          >
+            <Icon name="close" className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="sidebar-nav">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setSidebarOpen(false)}
+              className={`nav-link ${isActive(item.path) ? "nav-link-active" : ""}`}
+            >
+              <span className="nav-icon">
+                <Icon name={item.icon} className="h-4 w-4" />
+              </span>
+              <span>{item.label}</span>
+              {item.badge > 0 && (
+                <span className="nav-badge">
+                  {item.badge > 99 ? "99+" : item.badge}
+                </span>
+              )}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="sidebar-status-card">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-100/70">Live queue</p>
+          <div className="mt-4 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-3xl font-black leading-none text-white">{notificationCount}</p>
+              <p className="mt-1 text-xs font-semibold text-blue-100/70">unread update(s)</p>
+            </div>
+            <div className="progress-ring">
+              <span>{notificationCount > 0 ? "!" : "OK"}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div className="app-workspace">
+        <header className="app-topbar">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => setSidebarOpen((open) => !open)}
-              className="btn-secondary h-11 w-11 px-0 lg:hidden"
+              className="icon-button lg:hidden"
               aria-label="Toggle navigation"
             >
-              <span className="text-lg leading-none">{sidebarOpen ? "x" : "="}</span>
+              <Icon name="menu" className="h-5 w-5" />
             </button>
 
-            <div className="brand-mark">GS</div>
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-black tracking-tight text-slate-950 sm:text-xl">
-                GSMB IT Helpdesk
-              </h1>
-              <p className="hidden text-sm text-slate-500 sm:block">
-                Hardware service requests, procurement and inventory operations
-              </p>
+            <div className="topbar-title">
+              <p>Government IT portal</p>
+              <h2>Service Management Workspace</h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="topbar-actions">
             <Link
               to="/account"
               title={latestUpdate ? `${latestUpdate.ticketId}: ${latestUpdate.comment || "Request updated"}` : "My Account"}
-              className={`btn-secondary relative hidden sm:inline-flex ${isActive("/account") ? "border-cyan-300 bg-cyan-50 text-cyan-800" : ""}`}
+              className={`icon-button relative ${isActive("/account") ? "is-active" : ""}`}
+              aria-label="Request notifications"
             >
-              My Account
+              <Icon name="bell" className="h-5 w-5" />
               {notificationCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-black text-white">
-                  {notificationCount > 99 ? "99+" : notificationCount}
+                <span className="notification-dot">
+                  {notificationCount > 9 ? "9+" : notificationCount}
                 </span>
               )}
             </Link>
-            <div className="hidden rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-right sm:block">
-              <p className="text-sm font-black text-slate-900">{user?.name || "User"}</p>
-              <p className="text-xs font-semibold capitalize text-slate-500">{user?.role || "team"}</p>
+
+            <div className="user-pill">
+              <span className="avatar-dot">{getInitials(user?.name)}</span>
+              <span className="hidden min-w-0 sm:block">
+                <span className="block truncate text-sm font-black text-slate-900">{user?.name || "User"}</span>
+                <span className="block truncate text-xs font-semibold capitalize text-slate-500">
+                  {(user?.role || "team").replace(/_/g, " ")}
+                </span>
+              </span>
             </div>
-            <button type="button" onClick={handleLogout} className="btn-secondary">
-              Logout
+
+            <button type="button" onClick={handleLogout} className="icon-button" aria-label="Logout">
+              <Icon name="logout" className="h-5 w-5" />
             </button>
           </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        {sidebarOpen && (
-          <button
-            type="button"
-            aria-label="Close navigation"
-            className="fixed inset-0 z-30 bg-slate-950/40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        <aside
-          className={`fixed inset-y-0 left-0 z-40 mt-[112px] w-72 -translate-x-full border-r border-slate-800 bg-slate-950 px-4 py-5 text-white shadow-2xl transition lg:sticky lg:top-[73px] lg:mt-0 lg:h-[calc(100vh-73px)] lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : ""
-          }`}
-        >
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`nav-link ${isActive(item.path) ? "nav-link-active" : ""}`}
-              >
-                <span className="nav-icon">{item.icon}</span>
-                <span>{item.label}</span>
-                {item.badge > 0 && (
-                  <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-black text-white">
-                    {item.badge > 99 ? "99+" : item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="absolute bottom-5 left-4 right-4 rounded-lg border border-white/10 bg-white/5 p-4">
-            <p className="text-sm font-black">GSMB IT Services</p>
-            <p className="mt-1 text-xs leading-5 text-slate-400">
-              Role-based workflow for requests, approvals, stock, procurement and repairs.
-            </p>
-          </div>
-        </aside>
+        </header>
 
         <main className="min-w-0 flex-1">
           <div className="content-wrap">{children}</div>
@@ -166,6 +236,15 @@ function Layout({ children }) {
       </div>
     </div>
   );
+}
+
+function getInitials(name = "User") {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 export default Layout;

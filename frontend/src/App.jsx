@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
+import Users from "./pages/Users";
 
 import Assets from "./pages/Assets";
 import AddAsset from "./pages/AddAsset";
@@ -55,6 +56,15 @@ function App() {
         element={
           <ProtectedRoute>
             <MyAccount />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <Users />
           </ProtectedRoute>
         }
       />

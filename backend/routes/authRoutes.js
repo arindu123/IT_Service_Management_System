@@ -3,6 +3,7 @@ const {
   registerUser,
   loginUser,
   getUsers,
+  updateUserRole,
 } = require("../controllers/authController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
@@ -22,7 +23,10 @@ router.get("/profile", protect, (req, res) => {
   });
 });
 
-// Get all users - admin only
-router.get("/users", protect, authorizeRoles("admin"), getUsers);
+// Get all users - admin and head of IT only
+router.get("/users", protect, authorizeRoles("admin", "system_admin", "head_of_it"), getUsers);
+
+// Update user role - admin and head of IT only
+router.put("/role", protect, authorizeRoles("admin", "system_admin", "head_of_it"), updateUserRole);
 
 module.exports = router;

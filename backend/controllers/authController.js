@@ -56,13 +56,13 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
+    // Create user - default role is department_user for safety
     const user = await User.create({
       name,
       email,
       employeeId,
       password: hashedPassword,
-      role,
+      role: "department_user",
       department,
       designation,
       phone,
@@ -141,8 +141,59 @@ const getUsers = async (req, res) => {
   }
 };
 
+// Update user role - admin only
+const updateUserRole = async (req, res) => {
+  try {
+    const { userId, role } = req.body;
+
+    const validRoles = [
+      "admin",
+      "system_admin",
+      "head_of_it",
+      "technician",
+      "department_user",
+      "store_keeper",
+      "procurement_officer",
+      "management",
+    ];
+
+    if (!userId || !role) {
+      return res.status(400).json({
+        message: "User ID and role are required",
+      });
+    }
+
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({
+        message: "Invalid role specified",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.status(200).json({
+      message: "User role updated successfully",
+      user: serializeUser(user),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUsers,
+  updateUserRole,
 };

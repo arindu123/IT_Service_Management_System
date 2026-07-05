@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
-import { Alert, PageHeader, StatCard } from "../components/ui";
+import { Alert, Button, PageHeader, StatCard } from "../components/ui";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
 
@@ -44,7 +46,10 @@ function Dashboard() {
             eyebrow="Operations overview"
             title="Helpdesk Dashboard"
             description="A live view of hardware requests, approvals, procurement progress, assets and stock alerts."
+            action={<Button onClick={() => navigate("/tickets/create")}>New Request</Button>}
           />
+
+          <OperationsBoard summary={summary} />
 
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Total Users" value={summary.users.total} tone="blue" meta="Registered accounts" />
@@ -87,6 +92,119 @@ function Dashboard() {
         </>
       )}
     </Layout>
+  );
+}
+
+function OperationsBoard({ summary }) {
+  const totalTickets = summary.tickets.total || 0;
+  const activeTickets =
+    summary.tickets.submitted +
+    summary.tickets.acknowledged +
+    summary.tickets.underReview +
+    summary.tickets.procurement;
+  const finishedTickets = summary.tickets.installed + summary.tickets.closed;
+  const finishedPercent = totalTickets ? Math.round((finishedTickets / totalTickets) * 100) : 0;
+
+  const rows = [
+    {
+      description: "New hardware requests",
+      reference: summary.tickets.submitted,
+      owner: "Departments",
+      queue: "Helpdesk",
+      storage: "Intake",
+      tone: "blue",
+      status: "Pending",
+    },
+    {
+      description: "Under review",
+      reference: summary.tickets.underReview,
+      owner: "Head of IT",
+      queue: "Approvals",
+      storage: "Workflow",
+      tone: "amber",
+      status: "Processing",
+    },
+    {
+      description: "Procurement queue",
+      reference: summary.tickets.procurement,
+      owner: "Procurement",
+      queue: "Supply",
+      storage: "Orders",
+      tone: "red",
+      status: "Action",
+    },
+    {
+      description: "Installed or closed",
+      reference: finishedTickets,
+      owner: "Technicians",
+      queue: "Field work",
+      storage: "Archive",
+      tone: "green",
+      status: "Finished",
+    },
+  ];
+
+  return (
+    <section className="board-panel">
+      <div className="board-inner">
+        <div className="board-toolbar">
+          <div>
+            <p className="page-eyebrow">Service control</p>
+            <h3 className="board-title">Hardware Request Board</h3>
+          </div>
+          <div className="status-legend">
+            <span className="legend-dot" style={{ "--dot": "#efb94e" }}>Pending</span>
+            <span className="legend-dot" style={{ "--dot": "#44b88a" }}>Processing</span>
+            <span className="legend-dot" style={{ "--dot": "#df6e75" }}>Needs action</span>
+          </div>
+        </div>
+
+        <div className="board-filters">
+          <div className="faux-search">Search request, department, hardware or owner</div>
+          <div className="date-chip">Active queue: {activeTickets}</div>
+        </div>
+
+        <div className="segment-tabs" aria-label="Request workflow summary">
+          <span className="is-active">Submitted</span>
+          <span>Reviewed</span>
+          <span>Procurement</span>
+          <span>Finished</span>
+        </div>
+
+        <div className="preview-table-wrap">
+          <table className="preview-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Count</th>
+                <th>Owner</th>
+                <th>Queue</th>
+                <th>Storage</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.description}>
+                  <td className="font-black text-[#1d2a55]">{row.description}</td>
+                  <td>{row.reference}</td>
+                  <td>{row.owner}</td>
+                  <td>{row.queue}</td>
+                  <td>{row.storage}</td>
+                  <td>
+                    <span className={`badge badge-${row.tone}`}>{row.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        
+
+       
+      </div>
+    </section>
   );
 }
 
