@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
 import { Alert, Button } from "../components/ui";
 
@@ -42,14 +42,14 @@ function Login() {
             <div>
               <div className="brand-mark mb-8 bg-white text-slate-950">GS</div>
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">
-                GSMB service operations
+                GSMB hardware workflow
               </p>
               <h1 className="max-w-md text-4xl font-black leading-tight tracking-tight">
-                A focused workspace for IT assets, requests and repairs.
+                Secure requests, approvals, procurement and installation tracking.
               </h1>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {["Assets", "Tickets", "Inventory"].map((item) => (
+              {["Requests", "Approvals", "Inventory"].map((item) => (
                 <div key={item} className="rounded-lg border border-white/10 bg-white/5 p-4">
                   <p className="text-sm font-black">{item}</p>
                   <p className="mt-1 text-xs text-slate-400">Managed</p>
@@ -61,7 +61,7 @@ function Login() {
           <section className="p-6 sm:p-10">
             <div className="mb-8 lg:hidden">
               <div className="brand-mark mb-5">GS</div>
-              <h1 className="text-2xl font-black text-slate-950">GSMB IT Service Management</h1>
+              <h1 className="text-2xl font-black text-slate-950">GSMB IT Helpdesk</h1>
               <p className="mt-2 text-sm text-slate-500">Sign in to continue.</p>
             </div>
 
@@ -69,7 +69,7 @@ function Login() {
               <p className="page-eyebrow">Secure access</p>
               <h2 className="page-title">Sign in</h2>
               <p className="page-description">
-                Use your service desk credentials to open the operations dashboard.
+                Use your official credentials to open the hardware request workflow.
               </p>
 
               <div className="mt-6">
@@ -110,6 +110,15 @@ function Login() {
                 <p className="font-black text-slate-800">Demo credentials</p>
                 <p className="mt-2 font-mono">admin@gmail.com</p>
                 <p className="font-mono">123456</p>
+              </div>
+
+              <div className="mt-6 text-center text-sm text-slate-600">
+                <p>
+                  Don't have an account?{" "}
+                  <Link to="/register" className="font-bold text-cyan-600 hover:text-cyan-700">
+                    Sign up
+                  </Link>
+                </p>
               </div>
             </div>
           </section>

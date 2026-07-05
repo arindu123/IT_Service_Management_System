@@ -42,28 +42,31 @@ function Dashboard() {
         <>
           <PageHeader
             eyebrow="Operations overview"
-            title="Dashboard Summary"
-            description="A live view of users, assets, tickets and inventory alerts across GSMB IT services."
+            title="Helpdesk Dashboard"
+            description="A live view of hardware requests, approvals, procurement progress, assets and stock alerts."
           />
 
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Total Users" value={summary.users.total} tone="blue" meta="Registered accounts" />
             <StatCard label="Total Assets" value={summary.assets.total} tone="green" meta="Tracked equipment" />
-            <StatCard label="Total Tickets" value={summary.tickets.total} tone="amber" meta="Support requests" />
+            <StatCard label="Hardware Requests" value={summary.tickets.total} tone="amber" meta="Service workflow" />
             <StatCard label="Low Stock Items" value={summary.inventory.lowStockCount} tone="red" meta="Needs attention" />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <section className="dashboard-panel p-5">
               <div className="mb-4 border-b border-slate-100 pb-4">
-                <p className="page-eyebrow mb-1">Tickets</p>
-                <h3 className="text-lg font-black text-slate-950">Status Overview</h3>
+                <p className="page-eyebrow mb-1">Requests</p>
+                <h3 className="text-lg font-black text-slate-950">Lifecycle Overview</h3>
               </div>
               <div className="status-list">
-                <StatusRow label="Open" value={summary.tickets.open} tone="blue" />
-                <StatusRow label="Assigned" value={summary.tickets.assigned} tone="violet" />
-                <StatusRow label="In Progress" value={summary.tickets.inProgress} tone="amber" />
-                <StatusRow label="Resolved" value={summary.tickets.resolved} tone="green" />
+                <StatusRow label="Submitted" value={summary.tickets.submitted} tone="blue" />
+                <StatusRow label="Acknowledged" value={summary.tickets.acknowledged} tone="violet" />
+                <StatusRow label="Under Review" value={summary.tickets.underReview} tone="amber" />
+                <StatusRow label="In Procurement" value={summary.tickets.procurement} tone="red" />
+                <StatusRow label="Item Available" value={summary.tickets.itemAvailable} tone="green" />
+                <StatusRow label="Installation Scheduled" value={summary.tickets.installationScheduled} tone="amber" />
+                <StatusRow label="Installed" value={summary.tickets.installed} tone="green" />
                 <StatusRow label="Closed" value={summary.tickets.closed} tone="slate" />
               </div>
             </section>
