@@ -618,7 +618,9 @@ const downloadEvidence = async (req, res) => {
       });
     }
 
-    const filePath = path.join(__dirname, "..", attachment.path);
+    const filePath = path.isAbsolute(attachment.path)
+      ? attachment.path
+      : path.join(__dirname, "..", attachment.path);
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -677,7 +679,9 @@ const deleteEvidence = async (req, res) => {
       });
     }
 
-    const filePath = path.join(__dirname, "..", attachment.path);
+    const filePath = path.isAbsolute(attachment.path)
+      ? attachment.path
+      : path.join(__dirname, "..", attachment.path);
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -809,7 +813,9 @@ const deleteTicket = async (req, res) => {
 
     // Delete all attached files
     ticket.attachments.forEach((attachment) => {
-      const filePath = path.join(__dirname, "..", attachment.path);
+      const filePath = path.isAbsolute(attachment.path)
+        ? attachment.path
+        : path.join(__dirname, "..", attachment.path);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
-import { Alert, PageHeader, StatCard } from "../components/ui";
+import { Alert, Button, PageHeader, StatCard } from "../components/ui";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
 
@@ -44,7 +46,10 @@ function Dashboard() {
             eyebrow="Operations overview"
             title="Helpdesk Dashboard"
             description="A live view of hardware requests, approvals, procurement progress, assets and stock alerts."
+            action={<Button onClick={() => navigate("/tickets/create")}>New Request</Button>}
           />
+
+          <OperationsBoard summary={summary} />
 
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Total Users" value={summary.users.total} tone="blue" meta="Registered accounts" />
@@ -87,6 +92,163 @@ function Dashboard() {
         </>
       )}
     </Layout>
+  );
+}
+
+function OperationsBoard({ summary }) {
+  const [activeStage, setActiveStage] = useState("submitted");
+  const activeTickets =
+    summary.tickets.submitted +
+    summary.tickets.acknowledged +
+    summary.tickets.underReview +
+    summary.tickets.procurement;
+
+  const stageGroups = {
+    submitted: {
+      label: "Submitted",
+      rows: [
+        {
+          description: "New hardware requests",
+          reference: summary.tickets.submitted,
+          owner: "Departments",
+          queue: "Helpdesk",
+          storage: "Intake",
+          tone: "blue",
+          status: "Pending",
+        },
+      ],
+    },
+    reviewed: {
+      label: "Reviewed",
+      rows: [
+        {
+          description: "Acknowledged requests",
+          reference: summary.tickets.acknowledged,
+          owner: "Helpdesk",
+          queue: "Approvals",
+          storage: "Workflow",
+          tone: "violet",
+          status: "Reviewed",
+        },
+        {
+          description: "Under review",
+          reference: summary.tickets.underReview,
+          owner: "Head of IT",
+          queue: "Approvals",
+          storage: "Workflow",
+          tone: "amber",
+          status: "Processing",
+        },
+      ],
+    },
+    procurement: {
+      label: "Procurement",
+      rows: [
+        {
+          description: "Procurement queue",
+          reference: summary.tickets.procurement,
+          owner: "Procurement",
+          queue: "Supply",
+          storage: "Orders",
+          tone: "red",
+          status: "Action",
+        },
+      ],
+    },
+    finished: {
+      label: "Finished",
+      rows: [
+        {
+          description: "Installed requests",
+          reference: summary.tickets.installed,
+          owner: "Technicians",
+          queue: "Field work",
+          storage: "Archive",
+          tone: "green",
+          status: "Finished",
+        },
+        {
+          description: "Closed requests",
+          reference: summary.tickets.closed,
+          owner: "Technicians",
+          queue: "Closed",
+          storage: "Archive",
+          tone: "slate",
+          status: "Closed",
+        },
+      ],
+    },
+  };
+  const activeRows = stageGroups[activeStage].rows;
+
+  return (
+    <section className="board-panel">
+      <div className="board-inner">
+        <div className="board-toolbar">
+          <div>
+            <p className="page-eyebrow">Service control</p>
+            <h3 className="board-title">Hardware Request Board</h3>
+          </div>
+          <div className="status-legend">
+            <span className="legend-dot" style={{ "--dot": "#efb94e" }}>Pending</span>
+            <span className="legend-dot" style={{ "--dot": "#44b88a" }}>Processing</span>
+            <span className="legend-dot" style={{ "--dot": "#df6e75" }}>Needs action</span>
+          </div>
+        </div>
+
+        <div className="board-filters">
+          <div className="faux-search">Search request, department, hardware or owner</div>
+          <div className="date-chip">Active queue: {activeTickets}</div>
+        </div>
+
+        <div className="segment-tabs" aria-label="Request workflow summary">
+          {Object.entries(stageGroups).map(([stageKey, stage]) => (
+            <button
+              type="button"
+              key={stageKey}
+              className={activeStage === stageKey ? "is-active" : ""}
+              onClick={() => setActiveStage(stageKey)}
+              aria-pressed={activeStage === stageKey}
+            >
+              {stage.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="preview-table-wrap">
+          <table className="preview-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Count</th>
+                <th>Owner</th>
+                <th>Queue</th>
+                <th>Storage</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activeRows.map((row) => (
+                <tr key={row.description}>
+                  <td className="font-black text-[#1d2a55]">{row.description}</td>
+                  <td>{row.reference}</td>
+                  <td>{row.owner}</td>
+                  <td>{row.queue}</td>
+                  <td>{row.storage}</td>
+                  <td>
+                    <span className={`badge badge-${row.tone}`}>{row.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        
+
+       
+      </div>
+    </section>
   );
 }
 

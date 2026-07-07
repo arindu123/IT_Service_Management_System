@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
+import Users from "./pages/Users";
 
 import Assets from "./pages/Assets";
 import AddAsset from "./pages/AddAsset";
@@ -20,6 +21,7 @@ import Repairs from "./pages/Repairs";
 import CreateRepair from "./pages/CreateRepair";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import { IT_INVENTORY_ROLES } from "./utils/roles";
 
 function Home() {
   return <Navigate to="/login" />;
@@ -55,6 +57,15 @@ function App() {
         element={
           <ProtectedRoute>
             <MyAccount />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <Users />
           </ProtectedRoute>
         }
       />
@@ -107,7 +118,7 @@ function App() {
       <Route
         path="/inventory"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={IT_INVENTORY_ROLES}>
             <Inventory />
           </ProtectedRoute>
         }
@@ -116,7 +127,7 @@ function App() {
       <Route
         path="/inventory/add"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={IT_INVENTORY_ROLES}>
             <AddInventory />
           </ProtectedRoute>
         }

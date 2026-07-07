@@ -55,7 +55,7 @@ function AddInventory() {
     <Layout>
       <PageHeader
         eyebrow="New stock item"
-        title="Add Inventory Item"
+        title="Add IT Inventory Item"
         description="Add spare parts and consumables with reorder thresholds for stock control."
       />
 

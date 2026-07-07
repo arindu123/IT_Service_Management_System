@@ -50,16 +50,16 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#bae6fd_0,#f8fafc_36%,#e2e8f0_100%)] px-4 py-8">
+    <div className="min-h-screen bg-[#eef3fb] px-4 py-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center">
-        <div className="grid w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl shadow-slate-300/70 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="relative hidden bg-slate-950 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+        <div className="grid w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg lg:grid-cols-[1.05fr_0.95fr]">
+          <section className="relative hidden bg-[#344a86] p-10 text-white lg:flex lg:flex-col lg:justify-between">
             <div>
-              <div className="brand-mark mb-8 bg-white text-slate-950">GS</div>
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">
-                GSMB hardware workflow
+              <div className="brand-mark mb-8 bg-white text-[#344a86] font-black">GS</div>
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#f39c12]">
+                GSMB Hardware Workflow
               </p>
-              <h1 className="max-w-md text-4xl font-black leading-tight tracking-tight">
+              <h1 className="max-w-md text-3xl font-extrabold leading-tight tracking-tight">
                 Secure requests, approvals, procurement and installation tracking.
               </h1>
             </div>
@@ -67,7 +67,7 @@ function Register() {
               {["Requests", "Approvals", "Inventory"].map((item) => (
                 <div key={item} className="rounded-lg border border-white/10 bg-white/5 p-4">
                   <p className="text-sm font-black">{item}</p>
-                  <p className="mt-1 text-xs text-slate-400">Managed</p>
+                  <p className="mt-1 text-xs text-slate-300">Managed</p>
                 </div>
               ))}
             </div>
@@ -191,23 +191,6 @@ function Register() {
                   />
                 </div>
 
-                <div className="field">
-                  <label htmlFor="role">Role</label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                  >
-                    <option value="department_user">Department User</option>
-                    <option value="head_of_it">Head of IT</option>
-                    <option value="technician">Technician</option>
-                    <option value="store_keeper">Store Keeper</option>
-                    <option value="procurement_officer">Procurement / Finance Officer</option>
-                    <option value="management">Management</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
 
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Creating account..." : "Sign Up"}
@@ -217,7 +200,7 @@ function Register() {
               <div className="mt-6 text-center text-sm text-slate-600">
                 <p>
                   Already have an account?{" "}
-                  <Link to="/login" className="font-bold text-cyan-600 hover:text-cyan-700">
+                  <Link to="/login" className="font-bold text-blue-700 hover:text-blue-800">
                     Sign in
                   </Link>
                 </p>

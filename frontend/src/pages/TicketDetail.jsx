@@ -1,33 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
-import { Alert, Badge, Button, PageHeader } from "../components/ui";
-
-function formatLabel(value = "") {
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function formatFileSize(bytes) {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
-}
-
-function getFileIcon(mimeType) {
-  if (mimeType.startsWith("image/")) return "🖼️";
-  if (mimeType.startsWith("video/")) return "🎥";
-  if (mimeType.includes("pdf")) return "📄";
-  return "📎";
-}
+import { Alert, Badge, PageHeader } from "../components/ui";
 
 function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [, setSearchParams] = useSearchParams();
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [ticket, setTicket] = useState(null);
@@ -58,13 +38,12 @@ function TicketDetail() {
             Authorization: `Bearer ${token}`,
           },
         });
+
         setTicket(response.data);
-        
-        // Initialize edit form with ticket data
         setEditFormData({
           requestType: response.data.requestType,
           hardwareCategory: response.data.hardwareCategory,
-          currentAssetTag: response.data.currentAssetTag,
+          currentAssetTag: response.data.currentAssetTag || "",
           issueDescription: response.data.issueDescription,
           businessImpact: response.data.businessImpact || "",
           requestedSpecification: response.data.requestedSpecification || "",
@@ -74,6 +53,23 @@ function TicketDetail() {
             : "",
           remarks: response.data.remarks || "",
         });
+
+        const requestedAction = new URLSearchParams(window.location.search).get("action");
+
+        if (["edit", "delete"].includes(requestedAction)) {
+          const currentUser = JSON.parse(localStorage.getItem("user")) || {};
+          const canManageFetchedTicket = canManageOwnRequest(response.data, currentUser);
+
+          if (requestedAction === "edit" && canManageFetchedTicket) {
+            setShowEditModal(true);
+          } else if (requestedAction === "delete" && canManageFetchedTicket) {
+            setShowDeleteConfirm(true);
+          } else {
+            setError(`This request can no longer be ${requestedAction === "edit" ? "updated" : "deleted"}.`);
+          }
+
+          setSearchParams({}, { replace: true });
+        }
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load ticket");
       } finally {
@@ -82,26 +78,61 @@ function TicketDetail() {
     };
 
     fetchTicket();
-  }, [id]);
+  }, [id, setSearchParams]);
 
-  const canEdit = ticket && ticket.createdBy?._id === user._id && 
-                  ["draft", "submitted"].includes(ticket.status);
-  
-  const canDelete = ticket && ticket.createdBy?._id === user._id && 
-                    ["draft", "submitted"].includes(ticket.status);
+  const canEdit = canManageOwnRequest(ticket, user);
+  const canDelete = canEdit;
 
-  const handleDownloadEvidence = async (attachmentId, originalName) => {
+  const handleViewEvidence = async (attachmentId) => {
+    setError("");
+    setActionLoading(true);
+
+    const previewWindow = window.open("", "_blank");
+
+    if (!previewWindow) {
+      setError("Popup blocked. Please allow popups to view evidence.");
+      setActionLoading(false);
+      return;
+    }
+
+    previewWindow.opener = null;
+
     try {
       const token = localStorage.getItem("token");
-      const response = await API.get(
-        `/tickets/${id}/attachments/${attachmentId}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          responseType: "blob",
-        }
-      );
+      const response = await API.get(`/tickets/${id}/attachments/${attachmentId}/download`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"] || response.data.type,
+      });
+      const url = window.URL.createObjectURL(blob);
+
+      previewWindow.location.href = url;
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      previewWindow.close();
+      setError(err.response?.data?.message || "Failed to open evidence");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDownloadEvidence = async (attachmentId, originalName) => {
+    setError("");
+    setActionLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await API.get(`/tickets/${id}/attachments/${attachmentId}/download`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -112,7 +143,9 @@ function TicketDetail() {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError("Failed to download file");
+      setError(err.response?.data?.message || "Failed to download file");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -121,7 +154,10 @@ function TicketDetail() {
       return;
     }
 
+    setError("");
+    setSuccess("");
     setActionLoading(true);
+
     try {
       const token = localStorage.getItem("token");
       const response = await API.delete(`/tickets/${id}/attachments/${attachmentId}`, {
@@ -196,7 +232,7 @@ function TicketDetail() {
     return (
       <Layout>
         <PageHeader eyebrow="Loading" title="Ticket Details" />
-        <div className="text-center py-8">Loading...</div>
+        <div className="py-8 text-center">Loading...</div>
       </Layout>
     );
   }
@@ -225,161 +261,91 @@ function TicketDetail() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Ticket Info Card */}
-          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
-            <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <section className="dashboard-panel p-6">
+            <div className="mb-6 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <p className="page-eyebrow mb-1">Request Details</p>
                 <h3 className="text-lg font-black text-slate-950">{ticket.ticketId}</h3>
               </div>
-              <Badge text={formatLabel(ticket.status)} />
+              <Badge tone={statusTone(ticket.status)}>{formatLabel(ticket.status)}</Badge>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Request Type
-                </label>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {formatLabel(ticket.requestType)}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Hardware Category
-                </label>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {formatLabel(ticket.hardwareCategory)}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Priority
-                </label>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {formatLabel(ticket.priority)}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Department
-                </label>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {ticket.department || "N/A"}
-                </p>
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Issue Description
-                </label>
-                <p className="mt-1 text-sm text-slate-700">{ticket.issueDescription}</p>
-              </div>
-              {ticket.businessImpact && (
-                <div className="md:col-span-2">
-                  <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                    Business Impact
-                  </label>
-                  <p className="mt-1 text-sm text-slate-700">{ticket.businessImpact}</p>
-                </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <DetailItem label="Request Type" value={formatLabel(ticket.requestType)} />
+              <DetailItem label="Hardware Category" value={formatLabel(ticket.hardwareCategory)} />
+              <DetailItem label="Priority" value={formatLabel(ticket.priority)} />
+              <DetailItem label="Department" value={ticket.department || "N/A"} />
+              <DetailItem label="Issue Description" value={ticket.issueDescription} wide />
+              {ticket.businessImpact && <DetailItem label="Business Impact" value={ticket.businessImpact} wide />}
+              {ticket.requestedSpecification && (
+                <DetailItem label="Requested Specification" value={ticket.requestedSpecification} wide />
               )}
-              {ticket.remarks && (
-                <div className="md:col-span-2">
-                  <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                    Remarks
-                  </label>
-                  <p className="mt-1 text-sm text-slate-700">{ticket.remarks}</p>
-                </div>
-              )}
+              {ticket.remarks && <DetailItem label="Remarks" value={ticket.remarks} wide />}
             </div>
           </section>
 
-          {/* Requester Info Card */}
-          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
+          <section className="dashboard-panel p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
               <p className="page-eyebrow">Requester Information</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Name
-                </label>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {ticket.requesterProfile?.name || ticket.createdBy?.name}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Employee ID
-                </label>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {ticket.requesterProfile?.employeeId || "N/A"}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Email
-                </label>
-                <p className="mt-1 text-sm text-slate-700">
-                  {ticket.requesterProfile?.email || ticket.createdBy?.email}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                  Department
-                </label>
-                <p className="mt-1 text-sm text-slate-700">
-                  {ticket.requesterProfile?.department || "N/A"}
-                </p>
-              </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <DetailItem label="Name" value={ticket.requesterProfile?.name || ticket.createdBy?.name || "N/A"} />
+              <DetailItem label="Employee ID" value={ticket.requesterProfile?.employeeId || "N/A"} />
+              <DetailItem label="Email" value={ticket.requesterProfile?.email || ticket.createdBy?.email || "N/A"} />
+              <DetailItem label="Department" value={ticket.requesterProfile?.department || "N/A"} />
             </div>
           </section>
 
-          {/* Evidence Files Section */}
-          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
+          <section className="dashboard-panel p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
               <p className="page-eyebrow">Uploaded Evidence ({ticket.attachments?.length || 0})</p>
             </div>
 
-            {ticket.attachments && ticket.attachments.length > 0 ? (
+            {ticket.attachments?.length > 0 ? (
               <div className="space-y-3">
                 {ticket.attachments.map((attachment) => (
                   <div
                     key={attachment._id}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4"
+                    className="flex flex-col justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className="text-2xl">
-                        {getFileIcon(attachment.mimeType)}
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <span className="flex h-10 w-12 shrink-0 items-center justify-center rounded-md bg-white text-xs font-black text-slate-500">
+                        {getFileKind(attachment.mimeType)}
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">
-                          {attachment.originalName}
-                        </p>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-slate-900">{attachment.originalName}</p>
                         <p className="text-xs text-slate-600">
-                          {formatFileSize(attachment.size)} •{" "}
-                          {new Date(attachment.uploadedAt || attachment.createdAt).toLocaleDateString()}
+                          {formatFileSize(attachment.size)} | {formatDate(attachment.uploadedAt || attachment.createdAt)}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2 ml-4">
+
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
                       <button
-                        onClick={() =>
-                          handleDownloadEvidence(attachment._id, attachment.originalName)
-                        }
+                        type="button"
+                        onClick={() => handleViewEvidence(attachment._id)}
                         disabled={actionLoading}
-                        className="px-3 py-1.5 rounded bg-blue-50 text-blue-600 text-sm font-semibold hover:bg-blue-100 disabled:opacity-50"
+                        className="rounded bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadEvidence(attachment._id, attachment.originalName)}
+                        disabled={actionLoading}
+                        className="rounded bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-600 hover:bg-blue-100 disabled:opacity-50"
                       >
                         Download
                       </button>
-                      {canEdit && (
+                      {canDeleteAttachment(attachment, user) && (
                         <button
+                          type="button"
                           onClick={() => handleDeleteEvidence(attachment._id)}
                           disabled={actionLoading}
-                          className="px-3 py-1.5 rounded bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100 disabled:opacity-50"
+                          className="rounded bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
                         >
                           Delete
                         </button>
@@ -389,35 +355,25 @@ function TicketDetail() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-600 text-center py-4">
-                No evidence files uploaded yet
-              </p>
+              <p className="py-4 text-center text-sm text-slate-600">No evidence files uploaded yet</p>
             )}
           </section>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Status Timeline */}
-          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
+          <section className="dashboard-panel p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
               <p className="page-eyebrow">Status History</p>
             </div>
 
-            {ticket.statusHistory && ticket.statusHistory.length > 0 ? (
+            {ticket.statusHistory?.length > 0 ? (
               <div className="space-y-4 text-sm">
-                {ticket.statusHistory.slice().reverse().map((history, idx) => (
-                  <div key={idx} className="border-l-2 border-slate-200 pl-4">
-                    <p className="font-semibold text-slate-900">
-                      {formatLabel(history.newStatus)}
-                    </p>
-                    {history.comment && (
-                      <p className="text-xs text-slate-600 mt-1">{history.comment}</p>
-                    )}
+                {ticket.statusHistory.slice().reverse().map((history, index) => (
+                  <div key={history._id || index} className="border-l-2 border-slate-200 pl-4">
+                    <p className="font-semibold text-slate-900">{formatLabel(history.newStatus)}</p>
+                    {history.comment && <p className="mt-1 text-xs text-slate-600">{history.comment}</p>}
                     {history.changedBy && (
-                      <p className="text-xs text-slate-500 mt-1">
-                        by {history.changedBy.name}
-                      </p>
+                      <p className="mt-1 text-xs text-slate-500">by {history.changedBy.name}</p>
                     )}
                   </div>
                 ))}
@@ -427,61 +383,60 @@ function TicketDetail() {
             )}
           </section>
 
-          {/* Actions */}
-          {(canEdit || canDelete) && (
-            <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
-              <div className="mb-4 border-b border-slate-100 pb-4">
-                <p className="page-eyebrow">Actions</p>
-              </div>
+          <section className="dashboard-panel p-6">
+            <div className="mb-4 border-b border-slate-100 pb-4">
+              <p className="page-eyebrow">Actions</p>
+            </div>
 
-              <div className="space-y-3">
-                {canEdit && (
-                  <button
-                    onClick={() => setShowEditModal(true)}
-                    disabled={actionLoading}
-                    className="w-full px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Edit Ticket
-                  </button>
-                )}
-                {canDelete && (
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    disabled={actionLoading}
-                    className="w-full px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50"
-                  >
-                    Delete Ticket
-                  </button>
-                )}
+            <div className="space-y-3">
+              {canEdit && (
                 <button
-                  onClick={() => navigate("/tickets")}
-                  className="w-full px-4 py-2 rounded bg-slate-200 text-slate-900 font-semibold hover:bg-slate-300"
+                  type="button"
+                  onClick={() => setShowEditModal(true)}
+                  disabled={actionLoading}
+                  className="w-full rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  Back to Tickets
+                  Update Request
                 </button>
-              </div>
-            </section>
-          )}
+              )}
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={actionLoading}
+                  className="w-full rounded bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  Delete Request
+                </button>
+              )}
+              {!canEdit && (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500">
+                  Update and delete are available only to the requester while the request is submitted.
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate("/tickets")}
+                className="w-full rounded bg-slate-200 px-4 py-2 font-semibold text-slate-900 hover:bg-slate-300"
+              >
+                Back to Tickets
+              </button>
+            </div>
+          </section>
         </div>
       </div>
 
-      {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-lg font-black text-slate-950">Edit Ticket</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+            <div className="border-b border-slate-200 p-6">
+              <h2 className="text-lg font-black text-slate-950">Update Request</h2>
             </div>
 
-            <form onSubmit={handleUpdateTicket} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateTicket} className="space-y-4 p-6">
               <div className="field">
                 <label htmlFor="editRequestType">Request Type</label>
-                <select
-                  id="editRequestType"
-                  name="requestType"
-                  value={editFormData.requestType}
-                  onChange={handleEditChange}
-                >
+                <select id="editRequestType" name="requestType" value={editFormData.requestType} onChange={handleEditChange}>
                   <option value="fault">Fault</option>
                   <option value="replacement">Replacement</option>
                   <option value="upgrade">Upgrade</option>
@@ -499,15 +454,30 @@ function TicketDetail() {
                   value={editFormData.hardwareCategory}
                   onChange={handleEditChange}
                 >
+                  <option value="monitor">Monitor</option>
                   <option value="mouse">Mouse</option>
                   <option value="keyboard">Keyboard</option>
-                  <option value="monitor">Monitor</option>
+                  <option value="ram">RAM</option>
+                  <option value="storage">Storage</option>
                   <option value="cpu">CPU</option>
-                  <option value="laptop">Laptop</option>
                   <option value="printer">Printer</option>
-                  <option value="network">Network</option>
+                  <option value="laptop_desktop">Laptop / Desktop</option>
+                  <option value="network_device">Network Device</option>
+                  <option value="scanner">Scanner</option>
+                  <option value="accessories">Accessories</option>
                   <option value="other">Other</option>
                 </select>
+              </div>
+
+              <div className="field">
+                <label htmlFor="editCurrentAssetTag">Asset Tag / Serial</label>
+                <input
+                  id="editCurrentAssetTag"
+                  name="currentAssetTag"
+                  value={editFormData.currentAssetTag}
+                  onChange={handleEditChange}
+                  placeholder="Asset tag or serial number"
+                />
               </div>
 
               <div className="field">
@@ -522,42 +492,63 @@ function TicketDetail() {
               </div>
 
               <div className="field">
-                <label htmlFor="editPriority">Priority</label>
-                <select
-                  id="editPriority"
-                  name="priority"
-                  value={editFormData.priority}
-                  onChange={handleEditChange}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-
-              <div className="field">
-                <label htmlFor="editRemarks">Remarks</label>
+                <label htmlFor="editBusinessImpact">Business Impact</label>
                 <textarea
-                  id="editRemarks"
-                  name="remarks"
-                  value={editFormData.remarks}
+                  id="editBusinessImpact"
+                  name="businessImpact"
+                  value={editFormData.businessImpact}
                   onChange={handleEditChange}
                 />
               </div>
 
-              <div className="flex gap-3 justify-end border-t border-slate-200 pt-4">
+              <div className="field">
+                <label htmlFor="editRequestedSpecification">Requested Specification</label>
+                <input
+                  id="editRequestedSpecification"
+                  name="requestedSpecification"
+                  value={editFormData.requestedSpecification}
+                  onChange={handleEditChange}
+                />
+              </div>
+
+              <div className="field">
+                <label htmlFor="editPriority">Priority</label>
+                <select id="editPriority" name="priority" value={editFormData.priority} onChange={handleEditChange}>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+
+              <div className="field">
+                <label htmlFor="editPreferredInstallationTime">Preferred Installation Time</label>
+                <input
+                  id="editPreferredInstallationTime"
+                  type="datetime-local"
+                  name="preferredInstallationTime"
+                  value={editFormData.preferredInstallationTime}
+                  onChange={handleEditChange}
+                />
+              </div>
+
+              <div className="field">
+                <label htmlFor="editRemarks">Remarks</label>
+                <textarea id="editRemarks" name="remarks" value={editFormData.remarks} onChange={handleEditChange} />
+              </div>
+
+              <div className="flex justify-end gap-3 border-t border-slate-200 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 rounded bg-slate-200 text-slate-900 font-semibold hover:bg-slate-300"
+                  className="rounded bg-slate-200 px-4 py-2 font-semibold text-slate-900 hover:bg-slate-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {actionLoading ? "Saving..." : "Save Changes"}
                 </button>
@@ -567,34 +558,33 @@ function TicketDetail() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-lg font-black text-slate-950">Delete Ticket?</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white">
+            <div className="border-b border-slate-200 p-6">
+              <h2 className="text-lg font-black text-slate-950">Delete Request?</h2>
             </div>
 
             <div className="p-6">
-              <p className="text-sm text-slate-700 mb-4">
-                Are you sure you want to delete this ticket? This action cannot be undone.
+              <p className="mb-4 text-sm text-slate-700">
+                Are you sure you want to delete this request? This action cannot be undone.
               </p>
-              <p className="text-xs text-slate-600 mb-6">
-                Ticket ID: {ticket.ticketId}
-              </p>
+              <p className="mb-6 text-xs text-slate-600">Ticket ID: {ticket.ticketId}</p>
 
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={actionLoading}
-                  className="flex-1 px-4 py-2 rounded bg-slate-200 text-slate-900 font-semibold hover:bg-slate-300 disabled:opacity-50"
+                  className="flex-1 rounded bg-slate-200 px-4 py-2 font-semibold text-slate-900 hover:bg-slate-300 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleDeleteTicket}
                   disabled={actionLoading}
-                  className="flex-1 px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50"
+                  className="flex-1 rounded bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                 >
                   {actionLoading ? "Deleting..." : "Delete"}
                 </button>
@@ -604,6 +594,80 @@ function TicketDetail() {
         </div>
       )}
     </Layout>
+  );
+}
+
+function DetailItem({ label, value, wide = false }) {
+  return (
+    <div className={wide ? "md:col-span-2" : ""}>
+      <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</label>
+      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function formatLabel(value = "") {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatDate(value) {
+  if (!value) return "N/A";
+  return new Date(value).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatFileSize(bytes = 0) {
+  if (!bytes) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
+}
+
+function getFileKind(mimeType = "") {
+  if (mimeType.startsWith("image/")) return "IMG";
+  if (mimeType.startsWith("video/")) return "VID";
+  if (mimeType.includes("pdf")) return "PDF";
+  return "FILE";
+}
+
+function statusTone(status) {
+  if (["rejected", "cancelled"].includes(status)) return "red";
+  if (["procurement_required", "in_procurement", "installation_scheduled"].includes(status)) return "amber";
+  if (["installed", "closed", "item_available"].includes(status)) return "green";
+  if (["acknowledged", "technician_assigned", "under_review"].includes(status)) return "violet";
+  if (["submitted", "need_more_information", "inventory_check"].includes(status)) return "blue";
+  return "slate";
+}
+
+function getUserId(user = {}) {
+  return user.id || user._id || "";
+}
+
+function getPersonId(person) {
+  if (!person) return "";
+  if (typeof person === "string") return person;
+  return person._id || person.id || "";
+}
+
+function canDeleteAttachment(attachment, user) {
+  const userId = getUserId(user);
+  const uploadedById = getPersonId(attachment?.uploadedBy);
+
+  return Boolean(userId && (uploadedById === userId || ["admin", "system_admin"].includes(user.role)));
+}
+
+function canManageOwnRequest(ticket, user) {
+  const userId = getUserId(user);
+  const creatorId = getPersonId(ticket?.createdBy);
+
+  return Boolean(
+    userId &&
+      creatorId === userId &&
+      ["draft", "submitted"].includes(ticket?.status)
   );
 }
 

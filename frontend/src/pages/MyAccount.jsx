@@ -23,28 +23,27 @@ function MyAccount() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
   const [markingRead, setMarkingRead] = useState(false);
-  const [deletingAttachment, setDeletingAttachment] = useState(null);
-
-  const fetchMyTickets = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await API.get("/tickets/mine", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const nextTickets = response.data.tickets || [];
-      setTickets(nextTickets);
-      setSelectedTicketId((currentId) => currentId || nextTickets[0]?._id || "");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load account requests");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchMyTickets = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await API.get("/tickets/mine", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const nextTickets = response.data.tickets || [];
+        setTickets(nextTickets);
+        setSelectedTicketId((currentId) => currentId || nextTickets[0]?._id || "");
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load account requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchMyTickets();
   }, []);
 
@@ -103,34 +102,6 @@ function MyAccount() {
       setError(err.response?.data?.message || "Failed to mark notifications as read");
     } finally {
       setMarkingRead(false);
-    }
-  };
-
-  const handleDeleteAttachment = async (ticketId, attachmentId) => {
-    if (!window.confirm("Are you sure you want to delete this evidence file?")) {
-      return;
-    }
-
-    setError("");
-    setSuccess("");
-    setDeletingAttachment(attachmentId);
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await API.delete(`/tickets/${ticketId}/attachments/${attachmentId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setTickets((currentTickets) =>
-        currentTickets.map((ticket) => (ticket._id === ticketId ? response.data.ticket : ticket))
-      );
-      setSuccess("Evidence file deleted successfully");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete evidence file");
-    } finally {
-      setDeletingAttachment(null);
     }
   };
 
@@ -228,7 +199,7 @@ function MyAccount() {
             </section>
           </div>
 
-          <section className="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/60">
+          <section className="filter-panel">
             <div className="field">
               <label htmlFor="accountRequestSearch">Search My Requests</label>
               <input

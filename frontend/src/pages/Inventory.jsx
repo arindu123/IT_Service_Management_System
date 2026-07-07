@@ -34,7 +34,7 @@ function Inventory() {
     <Layout>
       <PageHeader
         eyebrow="Stock control"
-        title="Inventory Management"
+        title="IT Inventory Management"
         description="Review spare parts, reorder thresholds, unit cost and stock availability."
         action={<Button type="button" onClick={() => navigate("/inventory/add")}>Add Item</Button>}
       />
@@ -43,7 +43,7 @@ function Inventory() {
 
       <DataTable
         metric={`${items.length} records`}
-        emptyLabel="Inventory Items"
+        emptyLabel="IT Inventory Items"
         emptyMessage="No inventory items found"
         columns={["Item Name", "Category", "Quantity", "Reorder Level", "Unit Price", "Stock Status"]}
       >

@@ -40,7 +40,7 @@ function About() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/60">
+        <div className="dashboard-panel p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-600">About Us</p>
           <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">IT Service Management Team</h1>
           <p className="mt-4 max-w-2xl text-slate-600">
@@ -53,7 +53,7 @@ function About() {
           {teamMembers.map((member) => (
             <article
               key={member.name}
-              className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm shadow-slate-200/60"
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/60"
             >
               <div className="relative h-72 overflow-hidden bg-slate-950">
                 <img
