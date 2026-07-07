@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import { getTicketUpdates, getUnreadTicketUpdates } from "../utils/ticketUpdates";
+import { hasRole, IT_INVENTORY_ROLES } from "../utils/roles";
 
 const icons = {
   dashboard: (
@@ -110,7 +111,9 @@ function Layout({ children }) {
     { path: "/about", label: "About", icon: "about" },
     { path: "/assets", label: "Assets", icon: "assets" },
     { path: "/tickets", label: "Hardware Requests", icon: "tickets" },
-    { path: "/inventory", label: "Inventory", icon: "inventory" },
+    ...(hasRole(user, IT_INVENTORY_ROLES)
+      ? [{ path: "/inventory", label: "IT Inventory", icon: "inventory" }]
+      : []),
     { path: "/repairs", label: "Repairs", icon: "repairs" },
   ];
 

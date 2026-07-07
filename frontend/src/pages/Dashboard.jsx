@@ -96,53 +96,90 @@ function Dashboard() {
 }
 
 function OperationsBoard({ summary }) {
-  const totalTickets = summary.tickets.total || 0;
+  const [activeStage, setActiveStage] = useState("submitted");
   const activeTickets =
     summary.tickets.submitted +
     summary.tickets.acknowledged +
     summary.tickets.underReview +
     summary.tickets.procurement;
-  const finishedTickets = summary.tickets.installed + summary.tickets.closed;
-  const finishedPercent = totalTickets ? Math.round((finishedTickets / totalTickets) * 100) : 0;
 
-  const rows = [
-    {
-      description: "New hardware requests",
-      reference: summary.tickets.submitted,
-      owner: "Departments",
-      queue: "Helpdesk",
-      storage: "Intake",
-      tone: "blue",
-      status: "Pending",
+  const stageGroups = {
+    submitted: {
+      label: "Submitted",
+      rows: [
+        {
+          description: "New hardware requests",
+          reference: summary.tickets.submitted,
+          owner: "Departments",
+          queue: "Helpdesk",
+          storage: "Intake",
+          tone: "blue",
+          status: "Pending",
+        },
+      ],
     },
-    {
-      description: "Under review",
-      reference: summary.tickets.underReview,
-      owner: "Head of IT",
-      queue: "Approvals",
-      storage: "Workflow",
-      tone: "amber",
-      status: "Processing",
+    reviewed: {
+      label: "Reviewed",
+      rows: [
+        {
+          description: "Acknowledged requests",
+          reference: summary.tickets.acknowledged,
+          owner: "Helpdesk",
+          queue: "Approvals",
+          storage: "Workflow",
+          tone: "violet",
+          status: "Reviewed",
+        },
+        {
+          description: "Under review",
+          reference: summary.tickets.underReview,
+          owner: "Head of IT",
+          queue: "Approvals",
+          storage: "Workflow",
+          tone: "amber",
+          status: "Processing",
+        },
+      ],
     },
-    {
-      description: "Procurement queue",
-      reference: summary.tickets.procurement,
-      owner: "Procurement",
-      queue: "Supply",
-      storage: "Orders",
-      tone: "red",
-      status: "Action",
+    procurement: {
+      label: "Procurement",
+      rows: [
+        {
+          description: "Procurement queue",
+          reference: summary.tickets.procurement,
+          owner: "Procurement",
+          queue: "Supply",
+          storage: "Orders",
+          tone: "red",
+          status: "Action",
+        },
+      ],
     },
-    {
-      description: "Installed or closed",
-      reference: finishedTickets,
-      owner: "Technicians",
-      queue: "Field work",
-      storage: "Archive",
-      tone: "green",
-      status: "Finished",
+    finished: {
+      label: "Finished",
+      rows: [
+        {
+          description: "Installed requests",
+          reference: summary.tickets.installed,
+          owner: "Technicians",
+          queue: "Field work",
+          storage: "Archive",
+          tone: "green",
+          status: "Finished",
+        },
+        {
+          description: "Closed requests",
+          reference: summary.tickets.closed,
+          owner: "Technicians",
+          queue: "Closed",
+          storage: "Archive",
+          tone: "slate",
+          status: "Closed",
+        },
+      ],
     },
-  ];
+  };
+  const activeRows = stageGroups[activeStage].rows;
 
   return (
     <section className="board-panel">
@@ -165,10 +202,17 @@ function OperationsBoard({ summary }) {
         </div>
 
         <div className="segment-tabs" aria-label="Request workflow summary">
-          <span className="is-active">Submitted</span>
-          <span>Reviewed</span>
-          <span>Procurement</span>
-          <span>Finished</span>
+          {Object.entries(stageGroups).map(([stageKey, stage]) => (
+            <button
+              type="button"
+              key={stageKey}
+              className={activeStage === stageKey ? "is-active" : ""}
+              onClick={() => setActiveStage(stageKey)}
+              aria-pressed={activeStage === stageKey}
+            >
+              {stage.label}
+            </button>
+          ))}
         </div>
 
         <div className="preview-table-wrap">
@@ -184,7 +228,7 @@ function OperationsBoard({ summary }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {activeRows.map((row) => (
                 <tr key={row.description}>
                   <td className="font-black text-[#1d2a55]">{row.description}</td>
                   <td>{row.reference}</td>

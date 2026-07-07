@@ -30,6 +30,63 @@ const updateRoles = [
   "procurement_officer",
 ];
 
+const workflowStages = [
+  {
+    key: "submitted",
+    label: "Submitted",
+    statuses: ["submitted"],
+    color: "#efb94e",
+    updateStatus: "submitted",
+    nextAction: "Awaiting Assistant Director review",
+  },
+  {
+    key: "review",
+    label: "Review",
+    statuses: ["acknowledged", "need_more_information", "under_review", "technician_assigned", "inventory_check"],
+    color: "#7b8fcf",
+    updateStatus: "under_review",
+    nextAction: "Request is under Assistant Director review",
+  },
+  {
+    key: "procurement",
+    label: "Procurement",
+    statuses: ["procurement_required", "in_procurement"],
+    color: "#df6e75",
+    updateStatus: "procurement_required",
+    itemAvailability: "procurement_required",
+    procurementStatus: "requested",
+    nextAction: "Procurement process started",
+  },
+  {
+    key: "available",
+    label: "Available",
+    statuses: ["item_available", "installation_scheduled", "installed"],
+    color: "#44b88a",
+    updateStatus: "item_available",
+    itemAvailability: "available_in_stock",
+    nextAction: "Item is available for issue or installation",
+  },
+  {
+    key: "closed",
+    label: "Closed",
+    statuses: ["closed", "rejected", "cancelled"],
+    color: "#344a86",
+    updateStatus: "closed",
+    nextAction: "Request closed",
+  },
+];
+
+const initialStatusForm = {
+  status: "acknowledged",
+  expectedFulfillmentDate: "",
+  itemAvailability: "",
+  procurementStatus: "",
+  installationSchedule: "",
+  nextAction: "",
+  remarks: "",
+  comment: "",
+};
+
 function Tickets() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -38,17 +95,9 @@ function Tickets() {
   const [tickets, setTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [actionTicket, setActionTicket] = useState(null);
+  const [activeStage, setActiveStage] = useState("submitted");
   const [filters, setFilters] = useState({ keyword: "", status: "" });
-  const [statusForm, setStatusForm] = useState({
-    status: "acknowledged",
-    expectedFulfillmentDate: "",
-    itemAvailability: "",
-    procurementStatus: "",
-    installationSchedule: "",
-    nextAction: "",
-    remarks: "",
-    comment: "",
-  });
+  const [statusForm, setStatusForm] = useState(initialStatusForm);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -65,9 +114,13 @@ function Tickets() {
           },
         });
 
-        setTickets(response.data.tickets);
-        if (response.data.tickets.length > 0) {
-          setSelectedTicketId(response.data.tickets[0]._id);
+        const loadedTickets = response.data.tickets;
+        const visibleTickets = getFilteredTickets(loadedTickets, { keyword: "", status: "" }, "submitted");
+
+        setTickets(loadedTickets);
+        if (visibleTickets.length > 0) {
+          setSelectedTicketId(visibleTickets[0]._id);
+          setStatusForm(createStatusFormFromTicket(visibleTickets[0]));
         }
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load requests");
@@ -77,37 +130,29 @@ function Tickets() {
     fetchTickets();
   }, []);
 
+  const stageCounts = useMemo(() => {
+    return workflowStages.reduce((counts, stage) => {
+      counts[stage.key] = tickets.filter((ticket) => stage.statuses.includes(ticket.status)).length;
+      return counts;
+    }, {});
+  }, [tickets]);
+
   const filteredTickets = useMemo(() => {
-    const keyword = filters.keyword.trim().toLowerCase();
+    return getFilteredTickets(tickets, filters, activeStage);
+  }, [activeStage, filters, tickets]);
 
-    return tickets.filter((ticket) => {
-      const searchable = [
-        ticket.ticketId,
-        ticket.issueDescription,
-        ticket.department,
-        ticket.requesterProfile?.name,
-        ticket.requesterProfile?.employeeId,
-        ticket.hardwareCategory,
-        ticket.requestType,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      const matchesKeyword = !keyword || searchable.includes(keyword);
-      const matchesStatus = !filters.status || ticket.status === filters.status;
-
-      return matchesKeyword && matchesStatus;
-    });
-  }, [filters, tickets]);
-
-  const selectedTicket = tickets.find((ticket) => ticket._id === selectedTicketId);
+  const selectedTicket = filteredTickets.find((ticket) => ticket._id === selectedTicketId) || filteredTickets[0] || null;
+  const selectedTicketValue = selectedTicket?._id || "";
 
   const handleFilterChange = (e) => {
-    setFilters((prev) => ({
-      ...prev,
+    const nextFilters = {
+      ...filters,
       [e.target.name]: e.target.value,
-    }));
+    };
+    const visibleTickets = getFilteredTickets(tickets, nextFilters, activeStage);
+
+    setFilters(nextFilters);
+    selectTicket(visibleTickets[0] || null);
   };
 
   const handleStatusFormChange = (e) => {
@@ -117,10 +162,34 @@ function Tickets() {
     }));
   };
 
+  const handleStageChange = (stageKey) => {
+    const nextFilters = { ...filters, status: "" };
+    const visibleTickets = getFilteredTickets(tickets, nextFilters, stageKey);
+
+    setActiveStage(stageKey);
+    setFilters(nextFilters);
+    selectTicket(visibleTickets[0] || null);
+  };
+
+  const selectTicket = (ticket) => {
+    setSelectedTicketId(ticket?._id || "");
+    setStatusForm(ticket ? createStatusFormFromTicket(ticket) : initialStatusForm);
+  };
+
+  const applyStagePreset = (stage) => {
+    setStatusForm((prev) => ({
+      ...prev,
+      status: stage.updateStatus,
+      nextAction: stage.nextAction,
+      itemAvailability: stage.itemAvailability || prev.itemAvailability,
+      procurementStatus: stage.procurementStatus || prev.procurementStatus,
+    }));
+  };
+
   const handleUpdateStatus = async (e) => {
     e.preventDefault();
 
-    if (!selectedTicketId) return;
+    if (!selectedTicketValue) return;
 
     setError("");
     setSuccess("");
@@ -128,7 +197,7 @@ function Tickets() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await API.put(`/tickets/${selectedTicketId}/status`, statusForm, {
+      const response = await API.put(`/tickets/${selectedTicketValue}/status`, statusForm, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -137,6 +206,8 @@ function Tickets() {
       setTickets((prev) =>
         prev.map((ticket) => (ticket._id === response.data.ticket._id ? response.data.ticket : ticket))
       );
+      setSelectedTicketId(response.data.ticket._id);
+      setStatusForm(createStatusFormFromTicket(response.data.ticket));
       setSuccess(`${response.data.ticket.ticketId} updated successfully`);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update request");
@@ -254,9 +325,9 @@ function Tickets() {
   return (
     <Layout>
       <PageHeader
-        eyebrow="IT helpdesk workflow"
-        title="Hardware Requests"
-        description="Track hardware issues, upgrades, procurement progress, availability and installation closure."
+        eyebrow="Assistant Director review"
+        title="Hardware Request Control"
+        description="Check submitted requests, move them through review, procurement, availability and closure."
         action={<Button onClick={() => navigate("/tickets/create")}>New Request</Button>}
       />
 
@@ -267,8 +338,15 @@ function Tickets() {
         </div>
       )}
 
-      <section className="filter-panel">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_240px]">
+      <WorkflowStageTabs
+        stages={workflowStages}
+        activeStage={activeStage}
+        counts={stageCounts}
+        onChange={handleStageChange}
+      />
+
+      <section className="director-filter-panel">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
           <div className="field">
             <label htmlFor="keyword">Search Requests</label>
             <input
@@ -280,9 +358,9 @@ function Tickets() {
             />
           </div>
           <div className="field">
-            <label htmlFor="status">Status</label>
+            <label htmlFor="status">Detailed Status</label>
             <select id="status" name="status" value={filters.status} onChange={handleFilterChange}>
-              <option value="">All statuses</option>
+              <option value="">All in selected stage</option>
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
                   {formatLabel(status)}
@@ -294,21 +372,48 @@ function Tickets() {
       </section>
 
       {canUpdateWorkflow && (
-        <section className="workflow-panel">
-          <div className="mb-4 border-b border-slate-100 pb-4">
-            <p className="page-eyebrow mb-1">Fulfillment control</p>
-            <h3 className="text-lg font-black text-slate-950">Workflow Update</h3>
+        <section className="director-workbench">
+          <div className="director-selected">
+            <div className="flex flex-col gap-3 border-b border-[#edf1f8] pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="page-eyebrow mb-1">Selected request</p>
+                <h3 className="text-xl font-black text-[#1d2a55]">
+                  {selectedTicket?.ticketId || "No request selected"}
+                </h3>
+              </div>
+              {selectedTicket && <Badge tone={statusTone(selectedTicket.status)}>{formatLabel(selectedTicket.status)}</Badge>}
+            </div>
+
+            <SelectedRequestCard ticket={selectedTicket} />
           </div>
 
-          <form onSubmit={handleUpdateStatus} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <form onSubmit={handleUpdateStatus} className="director-update-form">
+            <div className="lg:col-span-3">
+              <p className="page-eyebrow mb-2">Move request to</p>
+              <div className="quick-stage-actions">
+                {workflowStages.map((stage) => (
+                  <button
+                    type="button"
+                    key={stage.key}
+                    onClick={() => applyStagePreset(stage)}
+                    className={statusForm.status === stage.updateStatus ? "is-selected" : ""}
+                    style={{ "--step": stage.color }}
+                    disabled={!selectedTicketValue}
+                  >
+                    {stage.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="field">
               <label htmlFor="selectedTicketId">Request</label>
               <select
                 id="selectedTicketId"
-                value={selectedTicketId}
-                onChange={(e) => setSelectedTicketId(e.target.value)}
+                value={selectedTicketValue}
+                onChange={(e) => selectTicket(filteredTickets.find((ticket) => ticket._id === e.target.value) || null)}
               >
-                {tickets.map((ticket) => (
+                {filteredTickets.map((ticket) => (
                   <option key={ticket._id} value={ticket._id}>
                     {ticket.ticketId} - {ticket.requesterProfile?.name || ticket.createdBy?.name || "Requester"}
                   </option>
@@ -415,26 +520,28 @@ function Tickets() {
 
             <div className="lg:col-span-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <SelectedSummary ticket={selectedTicket} />
-              <Button type="submit" disabled={loading || !selectedTicketId}>
-                {loading ? "Updating..." : "Update Workflow"}
+              <Button type="submit" disabled={loading || !selectedTicketValue}>
+                {loading ? "Updating..." : "Save Status Update"}
               </Button>
             </div>
           </form>
         </section>
       )}
 
-      <WorkflowStrip />
-
       <DataTable
-        metric={`${filteredTickets.length} records`}
-        emptyLabel="Hardware Requests"
+        metric={`${filteredTickets.length} records in ${workflowStages.find((stage) => stage.key === activeStage)?.label || "stage"}`}
+        emptyLabel="Requests for Review"
         columns={["Request", "Requester", "Type", "Priority", "Status", "Fulfillment", "Evidence", "Action"]}
       >
         {filteredTickets.length === 0 ? (
           <EmptyRow colSpan="8" message="No hardware requests found" />
         ) : (
           filteredTickets.map((ticket) => (
-            <tr key={ticket._id} onClick={() => openActionDialog(ticket)} className="cursor-pointer hover:bg-slate-50">
+            <tr
+              key={ticket._id}
+              onClick={() => selectTicket(ticket)}
+              className={`cursor-pointer hover:bg-slate-50 ${selectedTicketValue === ticket._id ? "selected-request-row" : ""}`}
+            >
               <td className="min-w-44">
                 <div className="font-black text-blue-600 hover:underline">{ticket.ticketId}</div>
                 <div className="text-xs font-semibold text-slate-500">
@@ -510,14 +617,59 @@ function Tickets() {
   );
 }
 
-function WorkflowStrip() {
+function WorkflowStageTabs({ stages, activeStage, counts, onChange }) {
   return (
-    <div className="workflow-strip" aria-label="Hardware request workflow">
-      <span className="workflow-step is-active" style={{ "--step": "#efb94e" }}>Submitted</span>
-      <span className="workflow-step" style={{ "--step": "#7b8fcf" }}>Review</span>
-      <span className="workflow-step" style={{ "--step": "#df6e75" }}>Procurement</span>
-      <span className="workflow-step" style={{ "--step": "#44b88a" }}>Available</span>
-      <span className="workflow-step" style={{ "--step": "#344a86" }}>Closed</span>
+    <div className="workflow-strip" aria-label="Hardware request workflow stages">
+      {stages.map((stage) => (
+        <button
+          type="button"
+          key={stage.key}
+          className={`workflow-step ${activeStage === stage.key ? "is-active" : ""}`}
+          style={{ "--step": stage.color }}
+          onClick={() => onChange(stage.key)}
+          aria-pressed={activeStage === stage.key}
+        >
+          <span>{stage.label}</span>
+          <strong>{counts[stage.key] || 0}</strong>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SelectedRequestCard({ ticket }) {
+  if (!ticket) {
+    return (
+      <div className="selected-empty">
+        Select a request from the table to review and update its status.
+      </div>
+    );
+  }
+
+  return (
+    <div className="selected-request-card">
+      <div>
+        <span>Requester</span>
+        <strong>{ticket.requesterProfile?.name || ticket.createdBy?.name || "Requester"}</strong>
+        <p>{ticket.requesterProfile?.employeeId || "No employee ID"} | {ticket.department}</p>
+      </div>
+      <div>
+        <span>Request Type</span>
+        <strong>{formatLabel(ticket.requestType)}</strong>
+        <p>{formatLabel(ticket.hardwareCategory)} {ticket.currentAssetTag ? `| ${ticket.currentAssetTag}` : ""}</p>
+      </div>
+      <div>
+        <span>Priority</span>
+        <Badge tone={priorityTone(ticket.priority)}>{ticket.priority}</Badge>
+      </div>
+      <div className="md:col-span-2">
+        <span>Issue</span>
+        <p className="selected-issue">{ticket.issueDescription}</p>
+      </div>
+      <div>
+        <span>Evidence</span>
+        <strong>{ticket.attachments?.length || 0} file(s)</strong>
+      </div>
     </div>
   );
 }
@@ -666,6 +818,46 @@ function SelectedSummary({ ticket }) {
   );
 }
 
+function getFilteredTickets(tickets, filters, activeStage) {
+  const keyword = filters.keyword.trim().toLowerCase();
+  const stage = workflowStages.find((item) => item.key === activeStage) || workflowStages[0];
+
+  return tickets.filter((ticket) => {
+    const searchable = [
+      ticket.ticketId,
+      ticket.issueDescription,
+      ticket.department,
+      ticket.requesterProfile?.name,
+      ticket.requesterProfile?.employeeId,
+      ticket.hardwareCategory,
+      ticket.requestType,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matchesKeyword = !keyword || searchable.includes(keyword);
+    const matchesStatus = filters.status
+      ? ticket.status === filters.status
+      : stage.statuses.includes(ticket.status);
+
+    return matchesKeyword && matchesStatus;
+  });
+}
+
+function createStatusFormFromTicket(ticket) {
+  return {
+    status: ticket.status || "acknowledged",
+    expectedFulfillmentDate: toDateInputValue(ticket.expectedFulfillmentDate),
+    itemAvailability: ticket.itemAvailability || "",
+    procurementStatus: ticket.procurementStatus || "",
+    installationSchedule: toDateTimeInputValue(ticket.installationSchedule),
+    nextAction: ticket.nextAction || "",
+    remarks: ticket.remarks || "",
+    comment: "",
+  };
+}
+
 function formatLabel(value = "") {
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
@@ -677,6 +869,21 @@ function formatDate(value) {
     month: "short",
     day: "numeric",
   });
+}
+
+function toDateInputValue(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function toDateTimeInputValue(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
 }
 
 function formatFileSize(bytes = 0) {

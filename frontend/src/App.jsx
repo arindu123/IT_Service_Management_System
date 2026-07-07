@@ -21,6 +21,7 @@ import Repairs from "./pages/Repairs";
 import CreateRepair from "./pages/CreateRepair";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import { IT_INVENTORY_ROLES } from "./utils/roles";
 
 function Home() {
   return <Navigate to="/login" />;
@@ -117,7 +118,7 @@ function App() {
       <Route
         path="/inventory"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={IT_INVENTORY_ROLES}>
             <Inventory />
           </ProtectedRoute>
         }
@@ -126,7 +127,7 @@ function App() {
       <Route
         path="/inventory/add"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={IT_INVENTORY_ROLES}>
             <AddInventory />
           </ProtectedRoute>
         }

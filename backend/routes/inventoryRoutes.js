@@ -12,26 +12,27 @@ const {
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 const router = express.Router();
+const itInventoryRoles = ["admin", "system_admin", "head_of_it", "technician", "store_keeper"];
 
 // All inventory routes are protected
 router.use(protect);
 
-// Create inventory item - admin only
-router.post("/", authorizeRoles("admin"), createInventoryItem);
+// Create inventory item - IT inventory roles only
+router.post("/", authorizeRoles(...itInventoryRoles), createInventoryItem);
 
-// Get low stock items
-router.get("/low-stock", getLowStockItems);
+// Get low stock items - IT inventory roles only
+router.get("/low-stock", authorizeRoles(...itInventoryRoles), getLowStockItems);
 
-// Get all inventory items
-router.get("/", getInventoryItems);
+// Get all inventory items - IT inventory roles only
+router.get("/", authorizeRoles(...itInventoryRoles), getInventoryItems);
 
-// Get single inventory item
-router.get("/:id", getInventoryItemById);
+// Get single inventory item - IT inventory roles only
+router.get("/:id", authorizeRoles(...itInventoryRoles), getInventoryItemById);
 
-// Update inventory item - admin only
-router.put("/:id", authorizeRoles("admin"), updateInventoryItem);
+// Update inventory item - IT inventory roles only
+router.put("/:id", authorizeRoles(...itInventoryRoles), updateInventoryItem);
 
-// Delete inventory item - admin only
-router.delete("/:id", authorizeRoles("admin"), deleteInventoryItem);
+// Delete inventory item - IT inventory roles only
+router.delete("/:id", authorizeRoles(...itInventoryRoles), deleteInventoryItem);
 
 module.exports = router;
