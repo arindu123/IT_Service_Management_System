@@ -2,6 +2,13 @@ const express = require("express");
 const {
   registerUser,
   loginUser,
+  checkPasswordResetStatus,
+  requestPasswordReset,
+  getPasswordResetRequests,
+  approvePasswordResetRequest,
+  cancelPasswordResetRequest,
+  getResetTokenStatus,
+  completePasswordReset,
   getUsers,
   updateUserRole,
 } = require("../controllers/authController");
@@ -15,6 +22,13 @@ router.post("/register", registerUser);
 // Login route
 router.post("/login", loginUser);
 
+// Forgot password route
+router.post("/forgot-password", requestPasswordReset);
+router.post("/password-reset/check", checkPasswordResetStatus);
+router.post("/password-reset/request", requestPasswordReset);
+router.get("/password-reset/token/:token", getResetTokenStatus);
+router.post("/password-reset/complete", completePasswordReset);
+
 // Protected profile route
 router.get("/profile", protect, (req, res) => {
   res.status(200).json({
@@ -25,6 +39,27 @@ router.get("/profile", protect, (req, res) => {
 
 // Get all users - admin and head of IT only
 router.get("/users", protect, authorizeRoles("admin", "system_admin", "head_of_it"), getUsers);
+
+router.get(
+  "/password-reset/requests",
+  protect,
+  authorizeRoles("admin", "system_admin", "head_of_it"),
+  getPasswordResetRequests
+);
+
+router.put(
+  "/password-reset/requests/:id/approve",
+  protect,
+  authorizeRoles("admin", "system_admin", "head_of_it"),
+  approvePasswordResetRequest
+);
+
+router.put(
+  "/password-reset/requests/:id/cancel",
+  protect,
+  authorizeRoles("admin", "system_admin", "head_of_it"),
+  cancelPasswordResetRequest
+);
 
 // Update user role - admin and head of IT only
 router.put("/role", protect, authorizeRoles("admin", "system_admin", "head_of_it"), updateUserRole);

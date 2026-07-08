@@ -108,7 +108,6 @@ function Layout({ children }) {
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
     { path: "/account", label: "My Account", icon: "account", badge: notificationCount },
-    { path: "/about", label: "About", icon: "about" },
     { path: "/assets", label: "Assets", icon: "assets" },
     { path: "/tickets", label: "Hardware Requests", icon: "tickets" },
     ...(hasRole(user, IT_INVENTORY_ROLES)
@@ -120,6 +119,8 @@ function Layout({ children }) {
   if (user?.role === "admin" || user?.role === "system_admin" || user?.role === "head_of_it") {
     navItems.push({ path: "/users", label: "User Management", icon: "users" });
   }
+
+  navItems.push({ path: "/about", label: "About", icon: "about" });
 
   return (
     <div className="app-shell">
