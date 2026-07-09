@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 import { getTicketUpdates, getUnreadTicketUpdates } from "../utils/ticketUpdates";
 import { hasRole, IT_INVENTORY_ROLES } from "../utils/roles";
+import { useTranslation } from "../i18n/LanguageContext";
+import LanguageSwitcher from "../i18n/LanguageSwitcher";
 
 const icons = {
   dashboard: (
@@ -54,6 +56,7 @@ function Icon({ name, className = "" }) {
 function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { enumLabel, t } = useTranslation();
   const user = JSON.parse(localStorage.getItem("user"));
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -106,28 +109,28 @@ function Layout({ children }) {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
-    { path: "/account", label: "My Account", icon: "account", badge: notificationCount },
-    { path: "/assets", label: "Assets", icon: "assets" },
-    { path: "/tickets", label: "Hardware Requests", icon: "tickets" },
+    { path: "/dashboard", label: t("layout.nav.dashboard"), icon: "dashboard" },
+    { path: "/account", label: t("layout.nav.account"), icon: "account", badge: notificationCount },
+    { path: "/assets", label: t("layout.nav.assets"), icon: "assets" },
+    { path: "/tickets", label: t("layout.nav.tickets"), icon: "tickets" },
     ...(hasRole(user, IT_INVENTORY_ROLES)
-      ? [{ path: "/inventory", label: "IT Inventory", icon: "inventory" }]
+      ? [{ path: "/inventory", label: t("layout.nav.inventory"), icon: "inventory" }]
       : []),
-    { path: "/repairs", label: "Repairs", icon: "repairs" },
+    { path: "/repairs", label: t("layout.nav.repairs"), icon: "repairs" },
   ];
 
   if (user?.role === "admin" || user?.role === "system_admin" || user?.role === "head_of_it") {
-    navItems.push({ path: "/users", label: "User Management", icon: "users" });
+    navItems.push({ path: "/users", label: t("layout.nav.users"), icon: "users" });
   }
 
-  navItems.push({ path: "/about", label: "About", icon: "about" });
+  navItems.push({ path: "/about", label: t("layout.nav.about"), icon: "about" });
 
   return (
     <div className="app-shell">
       {sidebarOpen && (
         <button
           type="button"
-          aria-label="Close navigation"
+          aria-label={t("layout.closeNavigation")}
           className="sidebar-scrim"
           onClick={() => setSidebarOpen(false)}
         />
@@ -137,14 +140,14 @@ function Layout({ children }) {
         <div className="sidebar-brand">
           <div className="brand-mark">GS</div>
           <div className="min-w-0">
-            <h1>GSMB Helpdesk</h1>
-            <p>Hardware operations</p>
+            <h1>{t("common.appName")}</h1>
+            <p>{t("common.hardwareOperations")}</p>
           </div>
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
             className="icon-button ml-auto lg:hidden"
-            aria-label="Close navigation"
+            aria-label={t("layout.closeNavigation")}
           >
             <Icon name="close" className="h-5 w-5" />
           </button>
@@ -172,14 +175,14 @@ function Layout({ children }) {
         </nav>
 
         <div className="sidebar-status-card">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-100/70">Live queue</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-100/70">{t("layout.liveQueue")}</p>
           <div className="mt-4 flex items-end justify-between gap-4">
             <div>
               <p className="text-3xl font-black leading-none text-white">{notificationCount}</p>
-              <p className="mt-1 text-xs font-semibold text-blue-100/70">unread update(s)</p>
+              <p className="mt-1 text-xs font-semibold text-blue-100/70">{t("layout.unreadUpdates")}</p>
             </div>
             <div className="progress-ring">
-              <span>{notificationCount > 0 ? "!" : "OK"}</span>
+              <span>{notificationCount > 0 ? "!" : t("common.ok")}</span>
             </div>
           </div>
         </div>
@@ -192,23 +195,24 @@ function Layout({ children }) {
               type="button"
               onClick={() => setSidebarOpen((open) => !open)}
               className="icon-button lg:hidden"
-              aria-label="Toggle navigation"
+              aria-label={t("layout.toggleNavigation")}
             >
               <Icon name="menu" className="h-5 w-5" />
             </button>
 
             <div className="topbar-title">
-              <p>Government IT portal</p>
-              <h2>Service Management Workspace</h2>
+              <p>{t("common.governmentPortal")}</p>
+              <h2>{t("common.workspace")}</h2>
             </div>
           </div>
 
           <div className="topbar-actions">
+            <LanguageSwitcher />
             <Link
               to="/account"
-              title={latestUpdate ? `${latestUpdate.ticketId}: ${latestUpdate.comment || "Request updated"}` : "My Account"}
+              title={latestUpdate ? `${latestUpdate.ticketId}: ${latestUpdate.comment || t("layout.requestUpdated")}` : t("layout.nav.account")}
               className={`icon-button relative ${isActive("/account") ? "is-active" : ""}`}
-              aria-label="Request notifications"
+              aria-label={t("layout.requestNotifications")}
             >
               <Icon name="bell" className="h-5 w-5" />
               {notificationCount > 0 && (
@@ -221,14 +225,14 @@ function Layout({ children }) {
             <div className="user-pill">
               <span className="avatar-dot">{getInitials(user?.name)}</span>
               <span className="hidden min-w-0 sm:block">
-                <span className="block truncate text-sm font-black text-slate-900">{user?.name || "User"}</span>
+                <span className="block truncate text-sm font-black text-slate-900">{user?.name || t("common.user")}</span>
                 <span className="block truncate text-xs font-semibold capitalize text-slate-500">
-                  {(user?.role || "team").replace(/_/g, " ")}
+                  {enumLabel("roles", user?.role || "team")}
                 </span>
               </span>
             </div>
 
-            <button type="button" onClick={handleLogout} className="icon-button" aria-label="Logout">
+            <button type="button" onClick={handleLogout} className="icon-button" aria-label={t("layout.logout")}>
               <Icon name="logout" className="h-5 w-5" />
             </button>
           </div>

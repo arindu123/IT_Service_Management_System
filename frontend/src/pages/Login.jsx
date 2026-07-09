@@ -2,9 +2,12 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
 import { Alert, Button } from "../components/ui";
+import { useTranslation } from "../i18n/LanguageContext";
+import LanguageSwitcher from "../i18n/LanguageSwitcher";
 
 function Login() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [employeeId, setEmployeeId] = useState("001");
   const [password, setPassword] = useState("123456");
@@ -28,7 +31,7 @@ function Login() {
 
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || t("auth.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -44,20 +47,21 @@ function Login() {
                 GS
               </div>
               <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-[#c8d8ff] bg-[#eaf1ff] px-3.5 py-1.5">
-                <span className="text-sm font-black tracking-tight text-slate-950">GSMB</span>
+                <span className="text-sm font-black tracking-tight text-slate-950">{t("common.brand")}</span>
                 <span className="h-4 w-px bg-[#b7c8f6]" aria-hidden="true" />
                 <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#1257ff]">
-                  IT Department
+                  {t("common.itDepartment")}
                 </span>
               </div>
+              <LanguageSwitcher className="auth-language-switcher" />
             </div>
 
             <div className="my-auto w-full max-w-[370px]">
               <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">
-                Sign in to your account
+                {t("auth.loginTitle")}
               </h1>
               <p className="mt-3 text-base font-medium text-slate-700">
-                Enter your employee ID to manage IT service requests
+                {t("auth.loginDescription")}
               </p>
 
               <div className="mt-7">
@@ -67,14 +71,14 @@ function Login() {
               <form onSubmit={handleSubmit} className="mt-5 space-y-4">
                 <div>
                   <label className="mb-2 text-[12px] normal-case tracking-normal text-slate-950" htmlFor="employeeId">
-                    Employee ID
+                    {t("labels.employeeId")}
                   </label>
                   <input
                     id="employeeId"
                     type="text"
                     value={employeeId}
                     onChange={(e) => setEmployeeId(e.target.value)}
-                    placeholder="Enter your employee ID"
+                    placeholder={t("placeholders.employeeId")}
                     autoComplete="username"
                     className="h-12 rounded-full border-slate-300 px-5 font-medium shadow-none focus:border-[#1257ff] focus:ring-[#d9e6ff]"
                     required
@@ -84,13 +88,13 @@ function Login() {
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <label className="mb-0 text-[12px] normal-case tracking-normal text-slate-950" htmlFor="password">
-                      Password
+                      {t("labels.password")}
                     </label>
                     <Link
                       to="/forgot-password"
                       className="text-[12px] font-black text-[#1257ff] underline-offset-4 hover:text-[#0c46d6] hover:underline"
                     >
-                      Forgot password?
+                      {t("auth.forgotPassword")}
                     </Link>
                   </div>
                   <input
@@ -98,7 +102,7 @@ function Login() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t("placeholders.password")}
                     className="h-12 rounded-full border-slate-300 px-5 font-medium shadow-none focus:border-[#1257ff] focus:ring-[#d9e6ff]"
                     required
                   />
@@ -109,17 +113,17 @@ function Login() {
                   disabled={loading}
                   className="mt-2 min-h-12 w-full rounded-full bg-[#1257ff] text-sm normal-case tracking-normal shadow-none hover:bg-[#0c46d6] disabled:bg-blue-300"
                 >
-                  {loading ? "Signing in..." : "Submit ->"}
+                  {loading ? t("common.signingIn") : t("common.submitArrow")}
                 </Button>
               </form>
 
               <p className="mt-5 text-center text-sm font-medium text-slate-600">
-                Don't have an account?{" "}
+                {t("auth.noAccount")}{" "}
                 <Link
                   to="/register"
                   className="font-black text-[#1257ff] underline-offset-4 hover:text-[#0c46d6] hover:underline"
                 >
-                  Sign up
+                  {t("common.signUp")}
                 </Link>
               </p>
             </div>
@@ -132,7 +136,7 @@ function Login() {
             <div className="absolute left-[13%] top-[28%] w-[76%] rounded-[18px] bg-[#eaf7fb] p-6 shadow-[0_30px_60px_rgba(2,8,23,0.28)]">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <p className="text-lg font-semibold text-slate-950">Analytics</p>
+                  <p className="text-lg font-semibold text-slate-950">{t("auth.analytics")}</p>
                   <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">184</p>
                 </div>
                 <div className="flex h-12 w-32 items-end gap-1.5">

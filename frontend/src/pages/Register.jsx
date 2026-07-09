@@ -2,68 +2,70 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
 import { Alert, Button } from "../components/ui";
+import { useTranslation } from "../i18n/LanguageContext";
+import LanguageSwitcher from "../i18n/LanguageSwitcher";
 
 const registerFields = [
   {
     id: "name",
-    label: "Full name",
+    labelKey: "labels.fullName",
     type: "text",
-    placeholder: "John Doe",
+    placeholderKey: "placeholders.fullName",
     autoComplete: "name",
     required: true,
     span: "sm:col-span-2",
   },
   {
     id: "email",
-    label: "Email address",
+    labelKey: "labels.emailAddress",
     type: "email",
-    placeholder: "your@email.com",
+    placeholderKey: "placeholders.email",
     autoComplete: "email",
     required: true,
   },
   {
     id: "employeeId",
-    label: "Employee ID",
+    labelKey: "labels.employeeId",
     type: "text",
-    placeholder: "EMP-001",
+    placeholderKey: "placeholders.registerEmployeeId",
     autoComplete: "off",
     required: true,
   },
   {
     id: "password",
-    label: "Password",
+    labelKey: "labels.password",
     type: "password",
-    placeholder: "Create a password",
+    placeholderKey: "placeholders.createPassword",
     autoComplete: "new-password",
     required: true,
   },
   {
     id: "phone",
-    label: "Phone",
+    labelKey: "labels.phone",
     type: "tel",
-    placeholder: "0700000000",
+    placeholderKey: "placeholders.phone",
     autoComplete: "tel",
     inputMode: "tel",
   },
   {
     id: "department",
-    label: "Department",
+    labelKey: "labels.department",
     type: "text",
-    placeholder: "IT / HR / Finance",
+    placeholderKey: "placeholders.department",
     autoComplete: "organization",
   },
   {
     id: "designation",
-    label: "Designation",
+    labelKey: "labels.designation",
     type: "text",
-    placeholder: "Assistant Director",
+    placeholderKey: "placeholders.designation",
     autoComplete: "organization-title",
   },
   {
     id: "officeLocation",
-    label: "Office location",
+    labelKey: "labels.officeLocation",
     type: "text",
-    placeholder: "Head Office / Branch",
+    placeholderKey: "placeholders.officeLocation",
     autoComplete: "street-address",
     span: "sm:col-span-2",
   },
@@ -71,6 +73,7 @@ const registerFields = [
 
 function Register() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -109,7 +112,7 @@ function Register() {
 
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || t("auth.registrationFailed"));
     } finally {
       setLoading(false);
     }
@@ -125,20 +128,21 @@ function Register() {
                 GS
               </div>
               <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-[#c8d8ff] bg-[#eaf1ff] px-3.5 py-1.5">
-                <span className="text-sm font-black tracking-tight text-slate-950">GSMB</span>
+                <span className="text-sm font-black tracking-tight text-slate-950">{t("common.brand")}</span>
                 <span className="h-4 w-px bg-[#b7c8f6]" aria-hidden="true" />
                 <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#1257ff]">
-                  IT Department
+                  {t("common.itDepartment")}
                 </span>
               </div>
+              <LanguageSwitcher className="auth-language-switcher" />
             </div>
 
             <div className="my-auto w-full max-w-[590px]">
               <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">
-                Create your account
+                {t("auth.registerTitle")}
               </h1>
               <p className="mt-3 max-w-lg text-base font-medium text-slate-700">
-                Register your staff profile to access IT service management.
+                {t("auth.registerDescription")}
               </p>
 
               <div className="mt-6">
@@ -153,7 +157,7 @@ function Register() {
                         className="mb-2 text-[12px] normal-case tracking-normal text-slate-950"
                         htmlFor={field.id}
                       >
-                        {field.label}
+                        {t(field.labelKey)}
                       </label>
                       <input
                         id={field.id}
@@ -161,7 +165,7 @@ function Register() {
                         name={field.id}
                         value={formData[field.id]}
                         onChange={handleChange}
-                        placeholder={field.placeholder}
+                        placeholder={t(field.placeholderKey)}
                         autoComplete={field.autoComplete}
                         inputMode={field.inputMode}
                         className="h-12 rounded-full border-slate-300 px-5 font-medium shadow-none focus:border-[#1257ff] focus:ring-[#d9e6ff]"
@@ -176,17 +180,17 @@ function Register() {
                   disabled={loading}
                   className="mt-5 min-h-12 w-full rounded-full bg-[#1257ff] text-sm normal-case tracking-normal shadow-none hover:bg-[#0c46d6] disabled:bg-blue-300"
                 >
-                  {loading ? "Creating account..." : "Create account ->"}
+                  {loading ? t("common.creatingAccount") : t("common.createAccountArrow")}
                 </Button>
               </form>
 
               <p className="mt-5 text-center text-sm font-medium text-slate-600">
-                Already have an account?{" "}
+                {t("auth.alreadyHaveAccount")}{" "}
                 <Link
                   to="/login"
                   className="font-black text-[#1257ff] underline-offset-4 hover:text-[#0c46d6] hover:underline"
                 >
-                  Sign in
+                  {t("common.signIn")}
                 </Link>
               </p>
             </div>
@@ -199,8 +203,8 @@ function Register() {
             <div className="absolute left-[12%] top-[16%] w-[76%] rounded-[20px] bg-[#eaf7fb] p-6 shadow-[0_30px_60px_rgba(2,8,23,0.3)]">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <p className="text-lg font-semibold text-slate-950">User access</p>
-                  <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">Ready</p>
+                  <p className="text-lg font-semibold text-slate-950">{t("auth.userAccess")}</p>
+                  <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">{t("auth.ready")}</p>
                 </div>
                 <div className="grid h-14 w-14 place-items-center rounded-full bg-[#1257ff] text-xl font-black text-white">
                   +
@@ -209,9 +213,9 @@ function Register() {
 
               <div className="mt-7 grid grid-cols-[auto_1fr] gap-x-4 gap-y-5 rounded-[18px] bg-white p-5">
                 {[
-                  ["01", "Profile details", "Full staff identity captured"],
-                  ["02", "Department info", "Office and role mapped"],
-                  ["03", "Helpdesk access", "Requests enabled after sign up"],
+                  ["01", t("auth.registerSteps.profileTitle"), t("auth.registerSteps.profileDetail")],
+                  ["02", t("auth.registerSteps.departmentTitle"), t("auth.registerSteps.departmentDetail")],
+                  ["03", t("auth.registerSteps.accessTitle"), t("auth.registerSteps.accessDetail")],
                 ].map(([step, title, detail], index) => (
                   <div key={step} className="contents">
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e8efff] text-sm font-black text-[#1257ff]">
@@ -228,8 +232,8 @@ function Register() {
               <div className="mt-6 grid grid-cols-3 gap-3">
                 {[
                   ["IT", "24"],
-                  ["Assets", "81"],
-                  ["Tickets", "156"],
+                  [t("layout.nav.assets"), "81"],
+                  [t("layout.nav.tickets"), "156"],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-[16px] bg-white px-4 py-4">
                     <p className="text-xs font-black uppercase tracking-[0.08em] text-slate-400">{label}</p>
@@ -246,7 +250,7 @@ function Register() {
               OK
             </div>
             <div className="absolute right-[18%] bottom-[16%] flex h-16 w-44 items-center justify-center rounded-full bg-white/90 px-5 text-sm font-black text-slate-950 shadow-xl">
-              Staff portal
+              {t("auth.staffPortal")}
             </div>
             <div className="absolute left-[10%] bottom-[12%] grid h-20 w-20 place-items-center rounded-full bg-[#254352] text-2xl font-black text-white shadow-xl">
               GS

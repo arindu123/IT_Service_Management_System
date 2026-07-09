@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../services/api";
 import { Alert, Button } from "../components/ui";
+import { useTranslation } from "../i18n/LanguageContext";
+import LanguageSwitcher from "../i18n/LanguageSwitcher";
 
 function ForgotPassword() {
+  const { t } = useTranslation();
   const [employeeId, setEmployeeId] = useState("");
   const [lookup, setLookup] = useState(null);
   const [error, setError] = useState("");
@@ -18,7 +21,7 @@ function ForgotPassword() {
     setMessage("");
 
     if (!trimmedEmployeeId) {
-      setError("Employee ID is required");
+      setError(t("auth.employeeRequired"));
       return null;
     }
 
@@ -31,12 +34,12 @@ function ForgotPassword() {
       setLookup(response.data);
 
       if (!response.data.registered) {
-        setError(response.data.message || "Employee ID is not registered.");
+        setError(response.data.message || t("auth.employeeNotRegistered"));
       }
 
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to check employee ID");
+      setError(err.response?.data?.message || t("auth.unableCheckEmployee"));
       return null;
     } finally {
       setChecking(false);
@@ -61,7 +64,7 @@ function ForgotPassword() {
       setLookup(response.data);
       setMessage(response.data.message);
     } catch (err) {
-      setError(err.response?.data?.message || "Password reset request failed");
+      setError(err.response?.data?.message || t("auth.resetRequestFailed"));
     } finally {
       setRequestingMethod("");
     }
@@ -82,23 +85,24 @@ function ForgotPassword() {
                 GS
               </div>
               <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-[#c8d8ff] bg-[#eaf1ff] px-3.5 py-1.5">
-                <span className="text-sm font-black tracking-tight text-slate-950">GSMB</span>
+                <span className="text-sm font-black tracking-tight text-slate-950">{t("common.brand")}</span>
                 <span className="h-4 w-px bg-[#b7c8f6]" aria-hidden="true" />
                 <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#1257ff]">
-                  IT Department
+                  {t("common.itDepartment")}
                 </span>
               </div>
+              <LanguageSwitcher className="auth-language-switcher" />
             </div>
 
             <div className="my-auto w-full max-w-[420px]">
               <p className="text-sm font-black uppercase tracking-[0.08em] text-slate-950">
-                Account recovery
+                {t("auth.accountRecovery")}
               </p>
               <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">
-                Reset password
+                {t("auth.resetPassword")}
               </h1>
               <p className="mt-3 text-base font-medium text-slate-700">
-                Check your employee ID, choose a reset method, then follow the status here.
+                {t("auth.resetDescription")}
               </p>
 
               <div className="mt-7 space-y-3">
@@ -113,7 +117,7 @@ function ForgotPassword() {
               <form onSubmit={handleCheck} className="mt-5 space-y-4">
                 <div>
                   <label className="mb-2 text-[12px] normal-case tracking-normal text-slate-950" htmlFor="employeeId">
-                    Employee ID
+                    {t("labels.employeeId")}
                   </label>
                   <input
                     id="employeeId"
@@ -125,7 +129,7 @@ function ForgotPassword() {
                       setMessage("");
                       setError("");
                     }}
-                    placeholder="Enter your employee ID"
+                    placeholder={t("placeholders.employeeId")}
                     autoComplete="username"
                     className="h-12 rounded-full border-slate-300 px-5 font-medium shadow-none focus:border-[#1257ff] focus:ring-[#d9e6ff]"
                     required
@@ -137,18 +141,22 @@ function ForgotPassword() {
                   disabled={checking}
                   className="min-h-12 w-full rounded-full bg-[#1257ff] text-sm normal-case tracking-normal shadow-none hover:bg-[#0c46d6] disabled:bg-blue-300"
                 >
-                  {checking ? "Checking..." : activeRequest ? "Refresh status ->" : "Check reset options ->"}
+                  {checking
+                    ? t("common.checking")
+                    : activeRequest
+                      ? t("common.refreshStatusArrow")
+                      : t("common.checkResetOptionsArrow")}
                 </Button>
               </form>
 
               {isKnownUser && (
                 <div className="mt-5 rounded-[18px] border border-[#dbe6ff] bg-white p-4 shadow-sm">
                   <p className="text-xs font-black uppercase tracking-[0.12em] text-[#1257ff]">
-                    Registered account
+                    {t("auth.registeredAccount")}
                   </p>
                   <p className="mt-2 text-lg font-black text-slate-950">{lookup.user.name}</p>
                   <p className="mt-1 text-sm font-semibold text-slate-600">
-                    {lookup.user.employeeId} | {lookup.user.emailMasked || "Email not available"}
+                    {lookup.user.employeeId} | {lookup.user.emailMasked || t("common.emailNotAvailable")}
                   </p>
                 </div>
               )}
@@ -162,10 +170,10 @@ function ForgotPassword() {
                     className="rounded-[18px] border border-[#c8d8ff] bg-[#eaf1ff] p-4 text-left transition hover:border-[#1257ff] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="block text-sm font-black text-slate-950">
-                      Reset through IT admin approval
+                      {t("auth.itAdminResetTitle")}
                     </span>
                     <span className="mt-1 block text-sm font-semibold text-slate-600">
-                      IT admin approves the request, then this page shows your reset link.
+                      {t("auth.itAdminResetDescription")}
                     </span>
                   </button>
 
@@ -176,12 +184,12 @@ function ForgotPassword() {
                     className="rounded-[18px] border border-slate-200 bg-white p-4 text-left transition hover:border-[#1257ff] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="block text-sm font-black text-slate-950">
-                      Email reset link
+                      {t("auth.emailResetTitle")}
                     </span>
                     <span className="mt-1 block text-sm font-semibold text-slate-600">
                       {lookup.emailResetConfigured
-                        ? "Send a reset link to the registered email address."
-                        : "Email delivery is not configured yet. Use IT admin approval for now."}
+                        ? t("auth.emailResetDescription")
+                        : t("auth.emailResetNotConfigured")}
                     </span>
                   </button>
                 </div>
@@ -189,35 +197,35 @@ function ForgotPassword() {
 
               {isPending && (
                 <div className="mt-5 rounded-[18px] border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-sm font-black text-amber-800">Pending with IT admin</p>
+                  <p className="text-sm font-black text-amber-800">{t("auth.pendingWithAdmin")}</p>
                   <p className="mt-2 text-sm font-semibold leading-6 text-amber-700">
-                    Your request is waiting for IT admin approval. Come back to this page and enter the same Employee ID to check again.
+                    {t("auth.pendingWithAdminDescription")}
                   </p>
                 </div>
               )}
 
               {isApproved && (
                 <div className="mt-5 rounded-[18px] border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-sm font-black text-emerald-800">Reset link ready</p>
+                  <p className="text-sm font-black text-emerald-800">{t("auth.resetLinkReady")}</p>
                   <p className="mt-2 text-sm font-semibold leading-6 text-emerald-700">
-                    IT admin approved your request. Open the link below and create a new password.
+                    {t("auth.resetLinkReadyDescription")}
                   </p>
                   <Link
                     to={new URL(activeRequest.resetLink).pathname}
                     className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#1257ff] px-5 text-sm font-black text-white hover:bg-[#0c46d6]"
                   >
-                    Open reset link
+                    {t("common.openResetLink")}
                   </Link>
                 </div>
               )}
 
               <p className="mt-5 text-center text-sm font-medium text-slate-600">
-                Remembered your password?{" "}
+                {t("auth.rememberedPassword")}{" "}
                 <Link
                   to="/login"
                   className="font-black text-[#1257ff] underline-offset-4 hover:text-[#0c46d6] hover:underline"
                 >
-                  Sign in
+                  {t("common.signIn")}
                 </Link>
               </p>
             </div>
@@ -230,8 +238,8 @@ function ForgotPassword() {
             <div className="absolute left-[12%] top-[22%] w-[76%] rounded-[20px] bg-[#eaf7fb] p-6 shadow-[0_30px_60px_rgba(2,8,23,0.3)]">
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <p className="text-lg font-semibold text-slate-950">Password support</p>
-                  <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">Live status</p>
+                  <p className="text-lg font-semibold text-slate-950">{t("auth.passwordSupport")}</p>
+                  <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">{t("auth.liveStatus")}</p>
                 </div>
                 <div className="grid h-14 w-14 place-items-center rounded-full bg-[#1257ff] text-xl font-black text-white">
                   ID
@@ -240,9 +248,9 @@ function ForgotPassword() {
 
               <div className="mt-7 rounded-[18px] bg-white p-5">
                 {[
-                  ["01", "Verify employee ID"],
-                  ["02", "Choose IT admin or email reset"],
-                  ["03", "Open approved reset link"],
+                  ["01", t("auth.verifyEmployeeId")],
+                  ["02", t("auth.chooseResetMethod")],
+                  ["03", t("auth.openApprovedResetLink")],
                 ].map(([step, title]) => (
                   <div key={step} className="flex items-center gap-4 border-b border-slate-100 py-4 first:pt-0 last:border-b-0 last:pb-0">
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-[#e8efff] text-sm font-black text-[#1257ff]">
@@ -258,7 +266,7 @@ function ForgotPassword() {
               OK
             </div>
             <div className="absolute right-[17%] bottom-[18%] flex h-16 w-44 items-center justify-center rounded-full bg-white/90 px-5 text-sm font-black text-slate-950 shadow-xl">
-              Reset request
+              {t("auth.resetRequest")}
             </div>
           </section>
         </div>

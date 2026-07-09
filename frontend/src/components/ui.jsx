@@ -1,3 +1,5 @@
+import { useTranslation } from "../i18n/LanguageContext";
+
 export function PageHeader({ eyebrow, title, description, action }) {
   return (
     <div className="page-header">
@@ -12,12 +14,14 @@ export function PageHeader({ eyebrow, title, description, action }) {
 }
 
 export function Alert({ message }) {
+  const { message: translateMessage } = useTranslation();
+
   if (!message) return null;
 
   return (
     <div className="alert-danger" role="alert">
       <span className="alert-mark">!</span>
-      <span>{message}</span>
+      <span>{translateMessage(message)}</span>
     </div>
   );
 }
