@@ -4,6 +4,7 @@ import API from "../services/api";
 import Layout from "../components/Layout";
 import { Alert, PageHeader } from "../components/ui";
 import { hasRole, IT_INVENTORY_ROLES } from "../utils/roles";
+import { useTranslation } from "../i18n/LanguageContext";
 
 const dashboardIcons = {
   queue: <path d="M4 5h16v4H4V5Zm0 6h10v4H4v-4Zm12 0h4v8H4v-2h12v-6Z" />,
@@ -14,12 +15,13 @@ const dashboardIcons = {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { enumLabel, t } = useTranslation();
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
 
   const user = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);
   const canViewInventory = hasRole(user, IT_INVENTORY_ROLES);
-  const model = useMemo(() => (summary ? buildDashboardModel(summary) : null), [summary]);
+  const model = useMemo(() => (summary ? buildDashboardModel(summary, t, enumLabel) : null), [enumLabel, summary, t]);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -34,12 +36,12 @@ function Dashboard() {
 
         setSummary(response.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load dashboard");
+        setError(err.response?.data?.message || t("dashboard.loadError"));
       }
     };
 
     fetchSummary();
-  }, []);
+  }, [t]);
 
   return (
     <Layout>
@@ -48,47 +50,47 @@ function Dashboard() {
       {!summary && !error && (
         <div className="dashboard-panel p-8 text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-500" />
-          <p className="font-semibold text-slate-600">Loading dashboard...</p>
+          <p className="font-semibold text-slate-600">{t("dashboard.loading")}</p>
         </div>
       )}
 
       {model && (
         <>
           <PageHeader
-            eyebrow="Executive operations"
-            title="Helpdesk Intelligence Dashboard"
-            description="A focused management view of service demand, asset reliability, procurement exposure and inventory risk."
+            eyebrow={t("dashboard.eyebrow")}
+            title={t("dashboard.title")}
+            description={t("dashboard.description")}
           />
 
           <ExecutiveSnapshot items={model.executiveSnapshot} />
 
-          <section className="dashboard-kpi-grid" aria-label="Dashboard highlights">
+          <section className="dashboard-kpi-grid" aria-label={t("dashboard.highlights")}>
             <MetricCard
               icon="queue"
-              label="Open Service Load"
+              label={t("dashboard.openServiceLoad")}
               value={model.activeQueue}
-              meta={`${model.completionRate}% closure rate`}
+              meta={t("dashboard.closureRate", { rate: model.completionRate })}
               tone="blue"
             />
             <MetricCard
               icon="assets"
-              label="Asset Reliability"
+              label={t("dashboard.assetReliability")}
               value={`${model.assetHealth}%`}
-              meta={`${model.assets.active} active of ${model.assets.total}`}
+              meta={t("dashboard.activeOfTotal", { active: model.assets.active, total: model.assets.total })}
               tone="green"
             />
             <MetricCard
               icon="stock"
-              label="Inventory Risk"
+              label={t("dashboard.inventoryRisk")}
               value={model.inventory.lowStockCount}
-              meta={`${model.inventory.readyCount} items within threshold`}
+              meta={t("dashboard.withinThreshold", { count: model.inventory.readyCount })}
               tone="red"
             />
             <MetricCard
               icon="repair"
-              label="Repair Register"
+              label={t("dashboard.repairRegister")}
               value={model.repairs.total}
-              meta="Repair records"
+              meta={t("dashboard.repairRecords")}
               tone="amber"
             />
           </section>
@@ -96,22 +98,22 @@ function Dashboard() {
           <section className="dashboard-main-grid">
             <DashboardPanel className="dashboard-panel-wide">
               <PanelHeader
-                eyebrow="Requests"
-                title="Lifecycle Distribution"
-                meta={`${model.tickets.total} total requests`}
+                eyebrow={t("dashboard.requests")}
+                title={t("dashboard.lifecycleDistribution")}
+                meta={t("dashboard.totalRequests", { count: model.tickets.total })}
               />
               <LifecycleBarChart data={model.ticketStages} />
             </DashboardPanel>
 
             <DashboardPanel>
               <PanelHeader
-                eyebrow="Assets"
-                title="Condition Mix"
-                meta={`${model.assets.total} tracked assets`}
+                eyebrow={t("dashboard.assets")}
+                title={t("dashboard.conditionMix")}
+                meta={t("dashboard.trackedAssets", { count: model.assets.total })}
               />
               <DonutSummary
                 value={`${model.assetHealth}%`}
-                label="active"
+                label={t("dashboard.active")}
                 segments={model.assetSegments}
               />
             </DashboardPanel>
@@ -120,9 +122,9 @@ function Dashboard() {
           <section className="dashboard-main-grid dashboard-lower-grid">
             <DashboardPanel>
               <PanelHeader
-                eyebrow="Priorities"
-                title="Operational Watchlist"
-                meta={`${model.attentionCount} items need attention`}
+                eyebrow={t("dashboard.priorities")}
+                title={t("dashboard.operationalWatchlist")}
+                meta={t("dashboard.needAttention", { count: model.attentionCount })}
               />
               <ActionFocus
                 actions={model.actionItems}
@@ -133,11 +135,11 @@ function Dashboard() {
 
             <DashboardPanel>
               <PanelHeader
-                eyebrow="Inventory"
-                title="Reorder Watch"
-                meta={`${model.inventory.lowStockCount} item alerts`}
+                eyebrow={t("dashboard.inventory")}
+                title={t("dashboard.reorderWatch")}
+                meta={t("dashboard.itemAlerts", { count: model.inventory.lowStockCount })}
               />
-              <LowStockList items={model.inventory.lowStockItems} canViewInventory={canViewInventory} />
+              <LowStockList items={model.inventory.lowStockItems} canViewInventory={canViewInventory} enumLabel={enumLabel} t={t} />
             </DashboardPanel>
           </section>
         </>
@@ -282,12 +284,12 @@ function ActionFocus({ actions, canViewInventory, onNavigate }) {
   );
 }
 
-function LowStockList({ items, canViewInventory }) {
+function LowStockList({ items, canViewInventory, enumLabel, t }) {
   if (items.length === 0) {
     return (
       <div className="dashboard-empty-state">
-        <strong>Stock levels are healthy</strong>
-        <span>No inventory items are below reorder level.</span>
+        <strong>{t("dashboard.stockHealthy")}</strong>
+        <span>{t("dashboard.noReorderItems")}</span>
       </div>
     );
   }
@@ -299,19 +301,19 @@ function LowStockList({ items, canViewInventory }) {
         const reorderLevel = count(item.reorderLevel);
         const stockPercent = clampPercent(percent(quantity, Math.max(reorderLevel, 1)));
         const shortage = Math.max(reorderLevel - quantity, 0);
-        const shortageLabel = shortage > 0 ? `Need ${shortage}` : "At threshold";
+        const shortageLabel = shortage > 0 ? t("dashboard.needQuantity", { count: shortage }) : t("common.atThreshold");
 
         return (
           <div className="stock-watch-row" key={item._id || `${item.itemName}-${index}`}>
             <div className="stock-watch-copy">
               <strong>{item.itemName}</strong>
-              <span>{formatLabel(item.category)}{item.location ? ` - ${item.location}` : ""}</span>
+              <span>{enumLabel("inventoryCategory", item.category)}{item.location ? ` - ${item.location}` : ""}</span>
             </div>
             <div className="stock-watch-meter">
               <div className="stock-meter-track" style={{ "--stock-width": `${stockPercent}%` }}>
                 <span />
               </div>
-              <small>{quantity}/{reorderLevel} in stock</small>
+              <small>{t("dashboard.stockCount", { quantity, reorderLevel })}</small>
             </div>
             <span className="stock-shortage">{shortageLabel}</span>
           </div>
@@ -320,14 +322,14 @@ function LowStockList({ items, canViewInventory }) {
 
       {!canViewInventory && (
         <div className="stock-watch-note">
-          Inventory page access is limited to IT inventory roles.
+          {t("dashboard.inventoryAccessLimited")}
         </div>
       )}
     </div>
   );
 }
 
-function buildDashboardModel(summary) {
+function buildDashboardModel(summary, t, enumLabel) {
   const tickets = summary.tickets || {};
   const assets = summary.assets || {};
   const inventory = summary.inventory || {};
@@ -365,7 +367,7 @@ function buildDashboardModel(summary) {
   const lowStockCount = count(inventory.lowStockCount);
   const totalInventoryItems = count(inventory.totalItems);
   const attentionCount = lowStockCount + ticketCounts.procurement + assetCounts.damaged;
-  const riskLabel = attentionCount > 0 ? "Monitor" : "Stable";
+  const riskLabel = attentionCount > 0 ? t("dashboard.riskMonitor") : t("dashboard.riskStable");
 
   return {
     users: {
@@ -388,68 +390,68 @@ function buildDashboardModel(summary) {
     assetHealth: percent(assetCounts.active, assetCounts.total),
     executiveSnapshot: [
       {
-        label: "Registered Users",
+        label: t("dashboard.registeredUsers"),
         value: count(summary.users?.total),
-        meta: "Active system audience",
+        meta: t("dashboard.activeAudience"),
       },
       {
-        label: "Total Requests",
+        label: t("dashboard.totalRequestsLabel"),
         value: ticketCounts.total,
-        meta: `${completedRequests} completed requests`,
+        meta: t("dashboard.completedRequests", { count: completedRequests }),
       },
       {
-        label: "Inventory Items",
+        label: t("dashboard.inventoryItems"),
         value: totalInventoryItems,
-        meta: `${Math.max(totalInventoryItems - lowStockCount, 0)} within reorder level`,
+        meta: t("dashboard.withinReorderLevel", { count: Math.max(totalInventoryItems - lowStockCount, 0) }),
       },
       {
-        label: "Risk Posture",
+        label: t("dashboard.riskPosture"),
         value: riskLabel,
-        meta: `${attentionCount} operational signal${attentionCount === 1 ? "" : "s"}`,
+        meta: t("dashboard.operationalSignals", { count: attentionCount }),
       },
     ],
     ticketStages: [
-      { label: "Submitted", value: ticketCounts.submitted, color: "#4b66ad" },
-      { label: "Acknowledged", value: ticketCounts.acknowledged, color: "#7c5fd6" },
-      { label: "Under Review", value: ticketCounts.underReview, color: "#efb94e" },
-      { label: "Procurement", value: ticketCounts.procurement, color: "#df6e75" },
-      { label: "Available", value: ticketCounts.itemAvailable, color: "#22a2b8" },
-      { label: "Scheduled", value: ticketCounts.installationScheduled, color: "#2f9e72" },
-      { label: "Installed", value: ticketCounts.installed, color: "#44b88a" },
-      { label: "Closed", value: ticketCounts.closed, color: "#64748b" },
+      { label: t("dashboard.stages.submitted"), value: ticketCounts.submitted, color: "#4b66ad" },
+      { label: t("dashboard.stages.acknowledged"), value: ticketCounts.acknowledged, color: "#7c5fd6" },
+      { label: t("dashboard.stages.underReview"), value: ticketCounts.underReview, color: "#efb94e" },
+      { label: t("dashboard.stages.procurement"), value: ticketCounts.procurement, color: "#df6e75" },
+      { label: t("dashboard.stages.available"), value: ticketCounts.itemAvailable, color: "#22a2b8" },
+      { label: t("dashboard.stages.scheduled"), value: ticketCounts.installationScheduled, color: "#2f9e72" },
+      { label: t("dashboard.stages.installed"), value: ticketCounts.installed, color: "#44b88a" },
+      { label: t("dashboard.stages.closed"), value: ticketCounts.closed, color: "#64748b" },
     ],
     assetSegments: [
-      { label: "Active", value: assetCounts.active, color: "#44b88a" },
-      { label: "Under Repair", value: assetCounts.underRepair, color: "#efb94e" },
-      { label: "Damaged", value: assetCounts.damaged, color: "#df6e75" },
-      { label: "Retired", value: assetCounts.retired, color: "#64748b" },
+      { label: enumLabel("assetStatus", "active"), value: assetCounts.active, color: "#44b88a" },
+      { label: enumLabel("assetStatus", "under_repair"), value: assetCounts.underRepair, color: "#efb94e" },
+      { label: enumLabel("assetStatus", "damaged"), value: assetCounts.damaged, color: "#df6e75" },
+      { label: enumLabel("assetStatus", "retired"), value: assetCounts.retired, color: "#64748b" },
     ],
     actionItems: [
       {
-        label: "Approval backlog",
+        label: t("dashboard.approvalBacklog"),
         value: ticketCounts.submitted + ticketCounts.acknowledged + ticketCounts.underReview,
-        meta: "Intake, acknowledgement and review-stage requests",
+        meta: t("dashboard.approvalBacklogMeta"),
         tone: "blue",
         path: "/tickets",
       },
       {
-        label: "Procurement exposure",
+        label: t("dashboard.procurementExposure"),
         value: ticketCounts.procurement,
-        meta: "Hardware requests waiting for supply action",
+        meta: t("dashboard.procurementExposureMeta"),
         tone: "amber",
         path: "/tickets",
       },
       {
-        label: "Installation readiness",
+        label: t("dashboard.installationReadiness"),
         value: ticketCounts.itemAvailable + ticketCounts.installationScheduled,
-        meta: "Items available or already scheduled",
+        meta: t("dashboard.installationReadinessMeta"),
         tone: "green",
         path: "/tickets",
       },
       {
-        label: "Reorder risk",
+        label: t("dashboard.reorderRisk"),
         value: lowStockCount,
-        meta: "Inventory items below reorder threshold",
+        meta: t("dashboard.reorderRiskMeta"),
         tone: "red",
         path: "/inventory",
       },
@@ -488,10 +490,6 @@ function percent(value, total) {
 
 function clampPercent(value) {
   return Math.max(0, Math.min(value, 100));
-}
-
-function formatLabel(value = "") {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default Dashboard;

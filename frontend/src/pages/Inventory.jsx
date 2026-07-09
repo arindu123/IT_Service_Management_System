@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import { Alert, Badge, Button, DataTable, EmptyRow, PageHeader } from "../components/ui";
+import { useTranslation } from "../i18n/LanguageContext";
 
 function Inventory() {
   const navigate = useNavigate();
+  const { enumLabel, t } = useTranslation();
 
   const [items, setItems] = useState([]);
   const [error, setError] = useState("");
@@ -23,7 +25,7 @@ function Inventory() {
 
         setItems(response.data.items);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load inventory");
+        setError(err.response?.data?.message || t("inventory.loadError"));
       }
     };
 
@@ -33,22 +35,22 @@ function Inventory() {
   return (
     <Layout>
       <PageHeader
-        eyebrow="Stock control"
-        title="IT Inventory Management"
-        description="Review spare parts, reorder thresholds, unit cost and stock availability."
-        action={<Button type="button" onClick={() => navigate("/inventory/add")}>Add Item</Button>}
+        eyebrow={t("inventory.eyebrow")}
+        title={t("inventory.title")}
+        description={t("inventory.description")}
+        action={<Button type="button" onClick={() => navigate("/inventory/add")}>{t("common.addItem")}</Button>}
       />
 
       <Alert message={error} />
 
       <DataTable
-        metric={`${items.length} records`}
-        emptyLabel="IT Inventory Items"
-        emptyMessage="No inventory items found"
-        columns={["Item Name", "Category", "Quantity", "Reorder Level", "Unit Price", "Stock Status"]}
+        metric={t("common.records", { count: items.length })}
+        emptyLabel={t("inventory.tableTitle")}
+        emptyMessage={t("inventory.empty")}
+        columns={[t("labels.itemName"), t("labels.category"), t("labels.quantity"), t("labels.reorderLevel"), t("labels.unitPrice"), t("labels.stockStatus")]}
       >
         {items.length === 0 ? (
-          <EmptyRow colSpan="6" message="No inventory items found" />
+          <EmptyRow colSpan="6" message={t("inventory.empty")} />
         ) : (
           items.map((item) => {
             const isLowStock = item.quantity <= item.reorderLevel;
@@ -57,14 +59,14 @@ function Inventory() {
               <tr key={item._id} className={isLowStock ? "bg-red-50/50" : ""}>
                 <td className="font-black text-slate-950">{item.itemName}</td>
                 <td>
-                  <Badge tone="slate">{formatLabel(item.category)}</Badge>
+                  <Badge tone="slate">{enumLabel("inventoryCategory", item.category)}</Badge>
                 </td>
                 <td className="font-black text-slate-900">{item.quantity}</td>
                 <td>{item.reorderLevel}</td>
                 <td className="font-bold">Rs. {item.unitPrice?.toFixed(2) || "0.00"}</td>
                 <td>
                   <Badge tone={isLowStock ? "red" : "green"}>
-                    {isLowStock ? "Low Stock" : "Available"}
+                    {isLowStock ? t("common.lowStock") : t("common.available")}
                   </Badge>
                 </td>
               </tr>
@@ -74,10 +76,6 @@ function Inventory() {
       </DataTable>
     </Layout>
   );
-}
-
-function formatLabel(value = "") {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default Inventory;

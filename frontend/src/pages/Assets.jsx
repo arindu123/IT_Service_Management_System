@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import { Alert, Badge, Button, DataTable, EmptyRow, PageHeader } from "../components/ui";
+import { useTranslation } from "../i18n/LanguageContext";
 
 function Assets() {
   const navigate = useNavigate();
+  const { enumLabel, t } = useTranslation();
 
   const [assets, setAssets] = useState([]);
   const [error, setError] = useState("");
@@ -23,7 +25,7 @@ function Assets() {
 
         setAssets(response.data.assets);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load assets");
+        setError(err.response?.data?.message || t("assets.loadError"));
       }
     };
 
@@ -33,32 +35,32 @@ function Assets() {
   return (
     <Layout>
       <PageHeader
-        eyebrow="Asset register"
-        title="Assets Management"
-        description="Track devices, ownership context and lifecycle status across departments."
-        action={<Button onClick={() => navigate("/assets/add")}>Add New Asset</Button>}
+        eyebrow={t("assets.eyebrow")}
+        title={t("assets.title")}
+        description={t("assets.description")}
+        action={<Button onClick={() => navigate("/assets/add")}>{t("common.addNewAsset")}</Button>}
       />
 
       <Alert message={error} />
 
       <DataTable
-        metric={`${assets.length} records`}
-        emptyLabel="IT Assets"
-        emptyMessage="No assets found"
-        columns={["Asset ID", "Device Type", "Brand", "Model", "Department", "Status"]}
+        metric={t("common.records", { count: assets.length })}
+        emptyLabel={t("assets.tableTitle")}
+        emptyMessage={t("assets.empty")}
+        columns={[t("labels.assetId"), t("labels.deviceType"), t("labels.brand"), t("labels.model"), t("labels.department"), t("labels.status")]}
       >
         {assets.length === 0 ? (
-          <EmptyRow colSpan="6" message="No assets found" />
+          <EmptyRow colSpan="6" message={t("assets.empty")} />
         ) : (
           assets.map((asset) => (
             <tr key={asset._id}>
               <td className="font-black text-slate-950">{asset.assetId}</td>
-              <td>{formatLabel(asset.deviceType)}</td>
+              <td>{enumLabel("deviceType", asset.deviceType)}</td>
               <td>{asset.brand}</td>
               <td>{asset.model}</td>
               <td>{asset.department}</td>
               <td>
-                <Badge tone={assetTone(asset.status)}>{formatLabel(asset.status)}</Badge>
+                <Badge tone={assetTone(asset.status)}>{enumLabel("assetStatus", asset.status)}</Badge>
               </td>
             </tr>
           ))
@@ -66,10 +68,6 @@ function Assets() {
       </DataTable>
     </Layout>
   );
-}
-
-function formatLabel(value = "") {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function assetTone(status) {

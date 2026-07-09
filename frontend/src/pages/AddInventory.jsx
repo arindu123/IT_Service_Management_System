@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import { Alert, Button, FormActions, FormPanel, PageHeader } from "../components/ui";
+import { useTranslation } from "../i18n/LanguageContext";
 
 function AddInventory() {
   const navigate = useNavigate();
+  const { enumLabel, t } = useTranslation();
 
   const [formData, setFormData] = useState({
     itemName: "",
@@ -45,7 +47,7 @@ function AddInventory() {
 
       navigate("/inventory");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create inventory item");
+      setError(err.response?.data?.message || t("inventory.createError"));
     } finally {
       setLoading(false);
     }
@@ -54,57 +56,57 @@ function AddInventory() {
   return (
     <Layout>
       <PageHeader
-        eyebrow="New stock item"
-        title="Add IT Inventory Item"
-        description="Add spare parts and consumables with reorder thresholds for stock control."
+        eyebrow={t("inventory.newEyebrow")}
+        title={t("inventory.addTitle")}
+        description={t("inventory.addDescription")}
       />
 
       <FormPanel>
         <Alert message={error} />
 
         <form onSubmit={handleSubmit} className="form-grid">
-          <Field label="Item Name">
-            <input name="itemName" value={formData.itemName} onChange={handleChange} placeholder="Item name" required />
+          <Field label={t("labels.itemName")}>
+            <input name="itemName" value={formData.itemName} onChange={handleChange} placeholder={t("placeholders.itemName")} required />
           </Field>
 
-          <Field label="Category">
+          <Field label={t("labels.category")}>
             <select name="category" value={formData.category} onChange={handleChange}>
-              <option value="computer_parts">Computer Parts</option>
-              <option value="printer_parts">Printer Parts</option>
-              <option value="network_parts">Network Parts</option>
-              <option value="cables">Cables</option>
-              <option value="accessories">Accessories</option>
-              <option value="other">Other</option>
+              <option value="computer_parts">{enumLabel("inventoryCategory", "computer_parts")}</option>
+              <option value="printer_parts">{enumLabel("inventoryCategory", "printer_parts")}</option>
+              <option value="network_parts">{enumLabel("inventoryCategory", "network_parts")}</option>
+              <option value="cables">{enumLabel("inventoryCategory", "cables")}</option>
+              <option value="accessories">{enumLabel("inventoryCategory", "accessories")}</option>
+              <option value="other">{enumLabel("inventoryCategory", "other")}</option>
             </select>
           </Field>
 
-          <Field label="Quantity">
-            <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="Quantity" required />
+          <Field label={t("labels.quantity")}>
+            <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder={t("placeholders.quantity")} required />
           </Field>
 
-          <Field label="Reorder Level">
-            <input type="number" name="reorderLevel" value={formData.reorderLevel} onChange={handleChange} placeholder="Reorder level" required />
+          <Field label={t("labels.reorderLevel")}>
+            <input type="number" name="reorderLevel" value={formData.reorderLevel} onChange={handleChange} placeholder={t("placeholders.reorderLevel")} required />
           </Field>
 
-          <Field label="Unit Price">
-            <input type="number" name="unitPrice" value={formData.unitPrice} onChange={handleChange} placeholder="Unit price" />
+          <Field label={t("labels.unitPrice")}>
+            <input type="number" name="unitPrice" value={formData.unitPrice} onChange={handleChange} placeholder={t("placeholders.unitPrice")} />
           </Field>
 
-          <Field label="Supplier Name">
-            <input name="supplierName" value={formData.supplierName} onChange={handleChange} placeholder="Supplier name" />
+          <Field label={t("labels.supplierName")}>
+            <input name="supplierName" value={formData.supplierName} onChange={handleChange} placeholder={t("placeholders.supplierName")} />
           </Field>
 
-          <Field label="Location">
-            <input name="location" value={formData.location} onChange={handleChange} placeholder="Location" />
+          <Field label={t("labels.location")}>
+            <input name="location" value={formData.location} onChange={handleChange} placeholder={t("placeholders.location")} />
           </Field>
 
-          <Field label="Notes" className="md:col-span-2">
-            <textarea name="notes" value={formData.notes} onChange={handleChange} placeholder="Optional inventory notes" />
+          <Field label={t("labels.notes")} className="md:col-span-2">
+            <textarea name="notes" value={formData.notes} onChange={handleChange} placeholder={t("placeholders.inventoryNotes")} />
           </Field>
 
           <FormActions>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Item"}</Button>
-            <Button type="button" variant="secondary" onClick={() => navigate("/inventory")}>Cancel</Button>
+            <Button type="submit" disabled={loading}>{loading ? t("common.saving") : t("common.saveItem")}</Button>
+            <Button type="button" variant="secondary" onClick={() => navigate("/inventory")}>{t("common.cancel")}</Button>
           </FormActions>
         </form>
       </FormPanel>

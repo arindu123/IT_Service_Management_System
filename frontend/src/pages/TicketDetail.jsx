@@ -3,11 +3,13 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import { Alert, Badge, PageHeader } from "../components/ui";
+import { useTranslation } from "../i18n/LanguageContext";
 
 function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
+  const { enumLabel, formatDate, formatDateTime, t } = useTranslation();
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [ticket, setTicket] = useState(null);
@@ -65,20 +67,22 @@ function TicketDetail() {
           } else if (requestedAction === "delete" && canManageFetchedTicket) {
             setShowDeleteConfirm(true);
           } else {
-            setError(`This request can no longer be ${requestedAction === "edit" ? "updated" : "deleted"}.`);
+            setError(t("ticketDetail.cannotAction", {
+              action: requestedAction === "edit" ? t("common.updateRequest") : t("common.deleteRequest"),
+            }));
           }
 
           setSearchParams({}, { replace: true });
         }
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load ticket");
+        setError(err.response?.data?.message || t("ticketDetail.loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchTicket();
-  }, [id, setSearchParams]);
+  }, [id, setSearchParams, t]);
 
   const canEdit = canManageOwnRequest(ticket, user);
   const canDelete = canEdit;
@@ -90,7 +94,7 @@ function TicketDetail() {
     const previewWindow = window.open("", "_blank");
 
     if (!previewWindow) {
-      setError("Popup blocked. Please allow popups to view evidence.");
+      setError(t("tickets.popupBlocked"));
       setActionLoading(false);
       return;
     }
@@ -115,7 +119,7 @@ function TicketDetail() {
       window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
     } catch (err) {
       previewWindow.close();
-      setError(err.response?.data?.message || "Failed to open evidence");
+      setError(err.response?.data?.message || t("ticketDetail.openEvidenceError"));
     } finally {
       setActionLoading(false);
     }
@@ -143,14 +147,14 @@ function TicketDetail() {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to download file");
+      setError(err.response?.data?.message || t("ticketDetail.downloadFileError"));
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteEvidence = async (attachmentId) => {
-    if (!window.confirm("Are you sure you want to delete this evidence file?")) {
+    if (!window.confirm(t("ticketDetail.deleteEvidenceConfirm"))) {
       return;
     }
 
@@ -167,10 +171,10 @@ function TicketDetail() {
       });
 
       setTicket(response.data.ticket);
-      setSuccess("Evidence file deleted successfully");
+      setSuccess(t("ticketDetail.evidenceDeleted"));
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete file");
+      setError(err.response?.data?.message || t("ticketDetail.deleteFileError"));
     } finally {
       setActionLoading(false);
     }
@@ -199,10 +203,10 @@ function TicketDetail() {
 
       setTicket(response.data.ticket);
       setShowEditModal(false);
-      setSuccess("Ticket updated successfully");
+      setSuccess(t("ticketDetail.ticketUpdated"));
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update ticket");
+      setError(err.response?.data?.message || t("ticketDetail.updateError"));
     } finally {
       setActionLoading(false);
     }
@@ -222,7 +226,7 @@ function TicketDetail() {
 
       navigate("/tickets");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete ticket");
+      setError(err.response?.data?.message || t("ticketDetail.deleteError"));
       setShowDeleteConfirm(false);
       setActionLoading(false);
     }
@@ -231,8 +235,8 @@ function TicketDetail() {
   if (loading) {
     return (
       <Layout>
-        <PageHeader eyebrow="Loading" title="Ticket Details" />
-        <div className="py-8 text-center">Loading...</div>
+        <PageHeader eyebrow={t("ticketDetail.loadingEyebrow")} title={t("ticketDetail.title")} />
+        <div className="py-8 text-center">{t("common.loading")}</div>
       </Layout>
     );
   }
@@ -240,8 +244,8 @@ function TicketDetail() {
   if (!ticket) {
     return (
       <Layout>
-        <PageHeader eyebrow="Error" title="Ticket Details" />
-        <Alert message={error || "Ticket not found"} />
+        <PageHeader eyebrow={t("ticketDetail.errorEyebrow")} title={t("ticketDetail.title")} />
+        <Alert message={error || t("ticketDetail.notFound")} />
       </Layout>
     );
   }
@@ -249,8 +253,8 @@ function TicketDetail() {
   return (
     <Layout>
       <PageHeader
-        eyebrow="IT helpdesk workflow"
-        title={`${ticket.ticketId} - Ticket Details`}
+        eyebrow={t("ticketDetail.eyebrow")}
+        title={t("ticketDetail.titleWithId", { ticketId: ticket.ticketId })}
         description={ticket.issueDescription}
       />
 
@@ -266,42 +270,42 @@ function TicketDetail() {
           <section className="dashboard-panel p-6">
             <div className="mb-6 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <p className="page-eyebrow mb-1">Request Details</p>
+                <p className="page-eyebrow mb-1">{t("labels.requestDetails")}</p>
                 <h3 className="text-lg font-black text-slate-950">{ticket.ticketId}</h3>
               </div>
-              <Badge tone={statusTone(ticket.status)}>{formatLabel(ticket.status)}</Badge>
+              <Badge tone={statusTone(ticket.status)}>{enumLabel("status", ticket.status)}</Badge>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <DetailItem label="Request Type" value={formatLabel(ticket.requestType)} />
-              <DetailItem label="Hardware Category" value={formatLabel(ticket.hardwareCategory)} />
-              <DetailItem label="Priority" value={formatLabel(ticket.priority)} />
-              <DetailItem label="Department" value={ticket.department || "N/A"} />
-              <DetailItem label="Issue Description" value={ticket.issueDescription} wide />
-              {ticket.businessImpact && <DetailItem label="Business Impact" value={ticket.businessImpact} wide />}
+              <DetailItem label={t("labels.requestType")} value={enumLabel("requestType", ticket.requestType)} />
+              <DetailItem label={t("labels.hardwareCategory")} value={enumLabel("hardwareCategory", ticket.hardwareCategory)} />
+              <DetailItem label={t("labels.priority")} value={enumLabel("priority", ticket.priority)} />
+              <DetailItem label={t("labels.department")} value={ticket.department || t("common.notAvailable")} />
+              <DetailItem label={t("labels.issueDescription")} value={ticket.issueDescription} wide />
+              {ticket.businessImpact && <DetailItem label={t("labels.businessImpact")} value={ticket.businessImpact} wide />}
               {ticket.requestedSpecification && (
-                <DetailItem label="Requested Specification" value={ticket.requestedSpecification} wide />
+                <DetailItem label={t("labels.requestedSpecification")} value={ticket.requestedSpecification} wide />
               )}
-              {ticket.remarks && <DetailItem label="Remarks" value={ticket.remarks} wide />}
+              {ticket.remarks && <DetailItem label={t("labels.remarks")} value={ticket.remarks} wide />}
             </div>
           </section>
 
           <section className="dashboard-panel p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
-              <p className="page-eyebrow">Requester Information</p>
+              <p className="page-eyebrow">{t("labels.requesterInformation")}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <DetailItem label="Name" value={ticket.requesterProfile?.name || ticket.createdBy?.name || "N/A"} />
-              <DetailItem label="Employee ID" value={ticket.requesterProfile?.employeeId || "N/A"} />
-              <DetailItem label="Email" value={ticket.requesterProfile?.email || ticket.createdBy?.email || "N/A"} />
-              <DetailItem label="Department" value={ticket.requesterProfile?.department || "N/A"} />
+              <DetailItem label={t("labels.name")} value={ticket.requesterProfile?.name || ticket.createdBy?.name || t("common.notAvailable")} />
+              <DetailItem label={t("labels.employeeId")} value={ticket.requesterProfile?.employeeId || t("common.notAvailable")} />
+              <DetailItem label={t("labels.email")} value={ticket.requesterProfile?.email || ticket.createdBy?.email || t("common.notAvailable")} />
+              <DetailItem label={t("labels.department")} value={ticket.requesterProfile?.department || t("common.notAvailable")} />
             </div>
           </section>
 
           <section className="dashboard-panel p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
-              <p className="page-eyebrow">Uploaded Evidence ({ticket.attachments?.length || 0})</p>
+              <p className="page-eyebrow">{t("labels.uploadedEvidence")} ({ticket.attachments?.length || 0})</p>
             </div>
 
             {ticket.attachments?.length > 0 ? (
@@ -330,7 +334,7 @@ function TicketDetail() {
                         disabled={actionLoading}
                         className="rounded bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                       >
-                        View
+                          {t("common.view")}
                       </button>
                       <button
                         type="button"
@@ -338,7 +342,7 @@ function TicketDetail() {
                         disabled={actionLoading}
                         className="rounded bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-600 hover:bg-blue-100 disabled:opacity-50"
                       >
-                        Download
+                        {t("common.download")}
                       </button>
                       {canDeleteAttachment(attachment, user) && (
                         <button
@@ -347,7 +351,7 @@ function TicketDetail() {
                           disabled={actionLoading}
                           className="rounded bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
                         >
-                          Delete
+                          {t("common.delete")}
                         </button>
                       )}
                     </div>
@@ -355,7 +359,7 @@ function TicketDetail() {
                 ))}
               </div>
             ) : (
-              <p className="py-4 text-center text-sm text-slate-600">No evidence files uploaded yet</p>
+              <p className="py-4 text-center text-sm text-slate-600">{t("ticketDetail.emptyEvidence")}</p>
             )}
           </section>
         </div>
@@ -363,29 +367,29 @@ function TicketDetail() {
         <div className="space-y-6">
           <section className="dashboard-panel p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
-              <p className="page-eyebrow">Status History</p>
+              <p className="page-eyebrow">{t("labels.statusHistory")}</p>
             </div>
 
             {ticket.statusHistory?.length > 0 ? (
               <div className="space-y-4 text-sm">
                 {ticket.statusHistory.slice().reverse().map((history, index) => (
                   <div key={history._id || index} className="border-l-2 border-slate-200 pl-4">
-                    <p className="font-semibold text-slate-900">{formatLabel(history.newStatus)}</p>
+                    <p className="font-semibold text-slate-900">{enumLabel("status", history.newStatus)}</p>
                     {history.comment && <p className="mt-1 text-xs text-slate-600">{history.comment}</p>}
                     {history.changedBy && (
-                      <p className="mt-1 text-xs text-slate-500">by {history.changedBy.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t("ticketDetail.changedBy", { name: history.changedBy.name })}</p>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-600">No status updates yet</p>
+              <p className="text-sm text-slate-600">{t("ticketDetail.noStatusUpdates")}</p>
             )}
           </section>
 
           <section className="dashboard-panel p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
-              <p className="page-eyebrow">Actions</p>
+              <p className="page-eyebrow">{t("common.actions")}</p>
             </div>
 
             <div className="space-y-3">
@@ -396,7 +400,7 @@ function TicketDetail() {
                   disabled={actionLoading}
                   className="w-full rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  Update Request
+                  {t("common.updateRequest")}
                 </button>
               )}
               {canDelete && (
@@ -406,12 +410,12 @@ function TicketDetail() {
                   disabled={actionLoading}
                   className="w-full rounded bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                 >
-                  Delete Request
+                  {t("common.deleteRequest")}
                 </button>
               )}
               {!canEdit && (
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500">
-                  Update and delete are available only to the requester while the request is submitted.
+                  {t("ticketDetail.updateAndDeleteNotice")}
                 </div>
               )}
               <button
@@ -419,7 +423,7 @@ function TicketDetail() {
                 onClick={() => navigate("/tickets")}
                 className="w-full rounded bg-slate-200 px-4 py-2 font-semibold text-slate-900 hover:bg-slate-300"
               >
-                Back to Tickets
+                {t("common.backToTickets")}
               </button>
             </div>
           </section>
@@ -430,58 +434,58 @@ function TicketDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
             <div className="border-b border-slate-200 p-6">
-              <h2 className="text-lg font-black text-slate-950">Update Request</h2>
+              <h2 className="text-lg font-black text-slate-950">{t("ticketDetail.updateModalTitle")}</h2>
             </div>
 
             <form onSubmit={handleUpdateTicket} className="space-y-4 p-6">
               <div className="field">
-                <label htmlFor="editRequestType">Request Type</label>
+                <label htmlFor="editRequestType">{t("labels.requestType")}</label>
                 <select id="editRequestType" name="requestType" value={editFormData.requestType} onChange={handleEditChange}>
-                  <option value="fault">Fault</option>
-                  <option value="replacement">Replacement</option>
-                  <option value="upgrade">Upgrade</option>
-                  <option value="performance_issue">Performance Issue</option>
-                  <option value="procurement">Procurement</option>
-                  <option value="other">Other</option>
+                  <option value="fault">{enumLabel("requestType", "fault")}</option>
+                  <option value="replacement">{enumLabel("requestType", "replacement")}</option>
+                  <option value="upgrade">{enumLabel("requestType", "upgrade")}</option>
+                  <option value="performance_issue">{enumLabel("requestType", "performance_issue")}</option>
+                  <option value="procurement">{enumLabel("requestType", "procurement")}</option>
+                  <option value="other">{enumLabel("requestType", "other")}</option>
                 </select>
               </div>
 
               <div className="field">
-                <label htmlFor="editHardwareCategory">Hardware Category</label>
+                <label htmlFor="editHardwareCategory">{t("labels.hardwareCategory")}</label>
                 <select
                   id="editHardwareCategory"
                   name="hardwareCategory"
                   value={editFormData.hardwareCategory}
                   onChange={handleEditChange}
                 >
-                  <option value="monitor">Monitor</option>
-                  <option value="mouse">Mouse</option>
-                  <option value="keyboard">Keyboard</option>
-                  <option value="ram">RAM</option>
-                  <option value="storage">Storage</option>
-                  <option value="cpu">CPU</option>
-                  <option value="printer">Printer</option>
-                  <option value="laptop_desktop">Laptop / Desktop</option>
-                  <option value="network_device">Network Device</option>
-                  <option value="scanner">Scanner</option>
-                  <option value="accessories">Accessories</option>
-                  <option value="other">Other</option>
+                  <option value="monitor">{enumLabel("hardwareCategory", "monitor")}</option>
+                  <option value="mouse">{enumLabel("hardwareCategory", "mouse")}</option>
+                  <option value="keyboard">{enumLabel("hardwareCategory", "keyboard")}</option>
+                  <option value="ram">{enumLabel("hardwareCategory", "ram")}</option>
+                  <option value="storage">{enumLabel("hardwareCategory", "storage")}</option>
+                  <option value="cpu">{enumLabel("hardwareCategory", "cpu")}</option>
+                  <option value="printer">{enumLabel("hardwareCategory", "printer")}</option>
+                  <option value="laptop_desktop">{enumLabel("hardwareCategory", "laptop_desktop")}</option>
+                  <option value="network_device">{enumLabel("hardwareCategory", "network_device")}</option>
+                  <option value="scanner">{enumLabel("hardwareCategory", "scanner")}</option>
+                  <option value="accessories">{enumLabel("hardwareCategory", "accessories")}</option>
+                  <option value="other">{enumLabel("hardwareCategory", "other")}</option>
                 </select>
               </div>
 
               <div className="field">
-                <label htmlFor="editCurrentAssetTag">Asset Tag / Serial</label>
+                <label htmlFor="editCurrentAssetTag">{t("labels.assetTagSerial")}</label>
                 <input
                   id="editCurrentAssetTag"
                   name="currentAssetTag"
                   value={editFormData.currentAssetTag}
                   onChange={handleEditChange}
-                  placeholder="Asset tag or serial number"
+                  placeholder={t("placeholders.assetTagSerial")}
                 />
               </div>
 
               <div className="field">
-                <label htmlFor="editIssueDescription">Issue Description</label>
+                <label htmlFor="editIssueDescription">{t("labels.issueDescription")}</label>
                 <textarea
                   id="editIssueDescription"
                   name="issueDescription"
@@ -492,7 +496,7 @@ function TicketDetail() {
               </div>
 
               <div className="field">
-                <label htmlFor="editBusinessImpact">Business Impact</label>
+                <label htmlFor="editBusinessImpact">{t("labels.businessImpact")}</label>
                 <textarea
                   id="editBusinessImpact"
                   name="businessImpact"
@@ -502,7 +506,7 @@ function TicketDetail() {
               </div>
 
               <div className="field">
-                <label htmlFor="editRequestedSpecification">Requested Specification</label>
+                <label htmlFor="editRequestedSpecification">{t("labels.requestedSpecification")}</label>
                 <input
                   id="editRequestedSpecification"
                   name="requestedSpecification"
@@ -512,17 +516,17 @@ function TicketDetail() {
               </div>
 
               <div className="field">
-                <label htmlFor="editPriority">Priority</label>
+                <label htmlFor="editPriority">{t("labels.priority")}</label>
                 <select id="editPriority" name="priority" value={editFormData.priority} onChange={handleEditChange}>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
+                  <option value="low">{enumLabel("priority", "low")}</option>
+                  <option value="medium">{enumLabel("priority", "medium")}</option>
+                  <option value="high">{enumLabel("priority", "high")}</option>
+                  <option value="critical">{enumLabel("priority", "critical")}</option>
                 </select>
               </div>
 
               <div className="field">
-                <label htmlFor="editPreferredInstallationTime">Preferred Installation Time</label>
+                <label htmlFor="editPreferredInstallationTime">{t("labels.preferredInstallationTime")}</label>
                 <input
                   id="editPreferredInstallationTime"
                   type="datetime-local"
@@ -533,7 +537,7 @@ function TicketDetail() {
               </div>
 
               <div className="field">
-                <label htmlFor="editRemarks">Remarks</label>
+                <label htmlFor="editRemarks">{t("labels.remarks")}</label>
                 <textarea id="editRemarks" name="remarks" value={editFormData.remarks} onChange={handleEditChange} />
               </div>
 
@@ -543,14 +547,14 @@ function TicketDetail() {
                   onClick={() => setShowEditModal(false)}
                   className="rounded bg-slate-200 px-4 py-2 font-semibold text-slate-900 hover:bg-slate-300"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
                   className="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {actionLoading ? "Saving..." : "Save Changes"}
+                  {actionLoading ? t("common.saving") : t("common.saveChanges")}
                 </button>
               </div>
             </form>
@@ -562,14 +566,14 @@ function TicketDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg bg-white">
             <div className="border-b border-slate-200 p-6">
-              <h2 className="text-lg font-black text-slate-950">Delete Request?</h2>
+              <h2 className="text-lg font-black text-slate-950">{t("ticketDetail.deleteModalTitle")}</h2>
             </div>
 
             <div className="p-6">
               <p className="mb-4 text-sm text-slate-700">
-                Are you sure you want to delete this request? This action cannot be undone.
+                {t("ticketDetail.deleteModalDescription")}
               </p>
-              <p className="mb-6 text-xs text-slate-600">Ticket ID: {ticket.ticketId}</p>
+              <p className="mb-6 text-xs text-slate-600">{t("ticketDetail.ticketId", { ticketId: ticket.ticketId })}</p>
 
               <div className="flex gap-3">
                 <button
@@ -578,7 +582,7 @@ function TicketDetail() {
                   disabled={actionLoading}
                   className="flex-1 rounded bg-slate-200 px-4 py-2 font-semibold text-slate-900 hover:bg-slate-300 disabled:opacity-50"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
@@ -586,7 +590,7 @@ function TicketDetail() {
                   disabled={actionLoading}
                   className="flex-1 rounded bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                 >
-                  {actionLoading ? "Deleting..." : "Delete"}
+                  {actionLoading ? t("common.deleting") : t("common.delete")}
                 </button>
               </div>
             </div>

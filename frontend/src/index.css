@@ -450,6 +450,22 @@
     @apply flex shrink-0 items-center gap-2 sm:gap-3;
   }
 
+  .language-switcher {
+    @apply inline-flex shrink-0 overflow-hidden rounded-full border border-[#dce3f1] bg-white p-1 shadow-sm;
+  }
+
+  .language-switcher button {
+    @apply inline-flex h-9 min-w-10 items-center justify-center rounded-full px-3 text-[11px] font-black text-[#6076b4] transition hover:bg-[#f6f8fe] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#344a86];
+  }
+
+  .language-switcher button.is-active {
+    @apply bg-[#344a86] text-white shadow-sm;
+  }
+
+  .auth-language-switcher {
+    @apply ml-auto;
+  }
+
   .icon-button {
     @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e1e7f4] bg-white text-[#344a86] shadow-sm transition hover:border-[#c7d3ee] hover:bg-[#f6f8fe] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#dbe5ff];
   }
