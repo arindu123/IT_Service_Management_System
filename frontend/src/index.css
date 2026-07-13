@@ -874,6 +874,99 @@
     @apply bg-[#344a86] text-white;
   }
 
+  .repair-register {
+    @apply overflow-hidden rounded-lg border border-[#dfe7f6] bg-white shadow-lg shadow-[#aab8d8]/20;
+  }
+
+  .repair-register-toolbar {
+    @apply flex flex-col justify-between gap-3 border-b border-[#edf1f8] bg-white px-5 py-4 sm:flex-row sm:items-center;
+  }
+
+  .repair-card-list {
+    @apply space-y-4 bg-[#f7f9ff] p-4 sm:p-5;
+  }
+
+  .repair-card {
+    @apply overflow-hidden rounded-lg border border-[#dfe7f6] bg-white shadow-md shadow-[#aab8d8]/15;
+  }
+
+  .repair-card-header {
+    @apply flex flex-col justify-between gap-4 border-b border-[#edf1f8] p-4 sm:flex-row sm:items-start sm:p-5;
+  }
+
+  .repair-identity {
+    @apply flex min-w-0 items-start gap-3;
+  }
+
+  .repair-mark {
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#344a86] text-sm font-black text-white shadow-sm;
+  }
+
+  .repair-card-title {
+    @apply min-w-0;
+  }
+
+  .repair-card-title p {
+    @apply text-[10px] font-black uppercase tracking-[0.16em] text-[#8793b5];
+  }
+
+  .repair-card-title h3 {
+    @apply mt-1 break-all text-xl font-black tracking-tight text-[#1d2a55];
+  }
+
+  .repair-card-title span {
+    @apply mt-1 block break-words text-xs font-bold text-[#62709a];
+  }
+
+  .repair-actions {
+    @apply flex shrink-0 flex-wrap gap-2 sm:justify-end;
+  }
+
+  .repair-action-button {
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg border border-[#c8d5ef] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[#344a86] shadow-sm transition hover:border-[#9eb2df] hover:bg-[#f0f3ff] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#dbe5ff] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .repair-action-danger {
+    @apply border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100;
+  }
+
+  .repair-summary-grid {
+    @apply grid grid-cols-1 gap-3 border-b border-[#edf1f8] bg-[#fbfcff] p-4 sm:grid-cols-3 sm:p-5;
+  }
+
+  .repair-summary-tile {
+    @apply min-w-0 rounded-lg border border-[#edf1f8] bg-white px-4 py-3;
+  }
+
+  .repair-summary-tile span,
+  .repair-detail-item span {
+    @apply block text-[10px] font-black uppercase tracking-[0.14em] text-[#8793b5];
+  }
+
+  .repair-summary-tile strong {
+    @apply mt-1 block truncate text-sm font-black text-[#1d2a55];
+  }
+
+  .repair-detail-grid {
+    @apply grid grid-cols-1 gap-x-5 gap-y-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .repair-detail-item {
+    @apply min-w-0 border-b border-[#edf1f8] pb-3;
+  }
+
+  .repair-detail-wide {
+    @apply md:col-span-2 xl:col-span-3;
+  }
+
+  .repair-detail-item p {
+    @apply mt-1 whitespace-pre-wrap break-words text-sm font-bold leading-6 text-[#485579];
+  }
+
+  .repair-empty-state {
+    @apply grid min-h-[180px] place-items-center bg-[#f7f9ff] px-4 py-10 text-center text-sm font-bold text-[#62709a];
+  }
+
   .selected-request-row td {
     background-color: #eef4ff !important;
   }

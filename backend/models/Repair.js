@@ -12,26 +12,41 @@ const repairSchema = new mongoose.Schema(
     ticket: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Ticket",
-      required: true,
+      required: false,
     },
 
     asset: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Asset",
-      required: true,
+      required: false,
     },
 
     technician: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
 
     diagnosis: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
+
+    // New Fields
+    rrNumber: { type: String },
+    type: { type: String },
+    model: { type: String },
+    serialNumber: { type: String },
+    userName: { type: String },
+    office: { type: String },
+    receivedDate: { type: Date },
+    errorDescription: { type: String },
+    servicePrinter: { type: String },
+    serviceDate: { type: Date },
+    returnSituation: { type: String },
+    returnDate: { type: Date },
+    specialNote: { type: String },
 
     notes: {
       type: String,
