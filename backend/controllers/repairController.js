@@ -2,76 +2,83 @@ const Repair = require("../models/Repair");
 const Ticket = require("../models/Ticket");
 const Asset = require("../models/Asset");
 
+const REPAIR_FIELDS = [
+  "rrNumber",
+  "type",
+  "model",
+  "serialNumber",
+  "userName",
+  "office",
+  "receivedDate",
+  "errorDescription",
+  "servicePrinter",
+  "serviceDate",
+  "returnSituation",
+  "returnDate",
+  "specialNote",
+  "notes",
+  "replacedParts",
+  "repairStatus",
+  "completionDate",
+];
+
+const DATE_FIELDS = new Set(["receivedDate", "serviceDate", "returnDate", "completionDate"]);
+
+function buildRepairPayload(body) {
+  return REPAIR_FIELDS.reduce((payload, field) => {
+    if (body[field] === undefined) return payload;
+
+    payload[field] = DATE_FIELDS.has(field) && body[field] === "" ? null : body[field];
+    return payload;
+  }, {});
+}
+
+async function buildAutoRrNumber() {
+  const year = new Date().getFullYear();
+  const rrPattern = new RegExp(`^RR/${year}/\\d{3}$`);
+
+  const existingRepairs = await Repair.find({ rrNumber: rrPattern }).select("rrNumber").lean();
+  const highestSequence = existingRepairs.reduce((max, repair) => {
+    const match = repair.rrNumber?.match(/^RR\/\d{4}\/(\d{3})$/);
+    if (!match) return max;
+
+    const sequence = Number.parseInt(match[1], 10);
+    return Number.isFinite(sequence) && sequence > max ? sequence : max;
+  }, 0);
+
+  return `RR/${year}/${String(highestSequence + 1).padStart(3, "0")}`;
+}
+
+const getNextRepairRrNumber = async (req, res) => {
+  try {
+    const rrNumber = await buildAutoRrNumber();
+
+    res.status(200).json({ rrNumber });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 // Create repair record
 const createRepair = async (req, res) => {
   try {
-    const {
-      ticketId,
-      diagnosis,
-      notes,
-      replacedParts,
-      repairStatus,
-      completionDate,
-    } = req.body;
-
-    if (!ticketId || !diagnosis) {
-      return res.status(400).json({
-        message: "Ticket ID and diagnosis are required",
-      });
-    }
-
-    const ticket = await Ticket.findOne({ ticketId }).populate("asset");
-
-    if (!ticket) {
-      return res.status(404).json({
-        message: "Ticket not found",
-      });
-    }
-
-    if (!ticket.asset) {
-      return res.status(400).json({
-        message: "A linked asset is required before creating a repair record",
-      });
-    }
-
     const repairCount = await Repair.countDocuments();
     const repairId = `REP-${String(repairCount + 1).padStart(3, "0")}`;
+    const rrNumber = await buildAutoRrNumber();
+    const repairPayload = buildRepairPayload(req.body);
 
     const repair = await Repair.create({
+      ...repairPayload,
       repairId,
-      ticket: ticket._id,
-      asset: ticket.asset._id,
-      technician: req.user._id,
-      diagnosis,
-      notes,
-      replacedParts,
-      repairStatus,
-      completionDate,
+      rrNumber,
     });
-
-    await Ticket.findByIdAndUpdate(ticket._id, {
-      status: repairStatus === "completed" ? "installed" : "under_review",
-      remarks: notes || ticket.remarks,
-    });
-
-    if (repairStatus === "completed") {
-      await Asset.findByIdAndUpdate(ticket.asset._id, {
-        status: "active",
-      });
-    } else {
-      await Asset.findByIdAndUpdate(ticket.asset._id, {
-        status: "under_repair",
-      });
-    }
-
-    const populatedRepair = await Repair.findById(repair._id)
-      .populate("ticket")
-      .populate("asset")
-      .populate("technician", "name email role department");
 
     res.status(201).json({
       message: "Repair record created successfully",
-      repair: populatedRepair,
+      repair,
     });
   } catch (error) {
     res.status(500).json({
@@ -128,7 +135,7 @@ const getRepairById = async (req, res) => {
 // Update repair record
 const updateRepair = async (req, res) => {
   try {
-    const repair = await Repair.findByIdAndUpdate(req.params.id, req.body, {
+    const repair = await Repair.findByIdAndUpdate(req.params.id, buildRepairPayload(req.body), {
       new: true,
       runValidators: true,
     })
@@ -154,9 +161,33 @@ const updateRepair = async (req, res) => {
   }
 };
 
+// Delete repair record
+const deleteRepair = async (req, res) => {
+  try {
+    const repair = await Repair.findByIdAndDelete(req.params.id);
+
+    if (!repair) {
+      return res.status(404).json({
+        message: "Repair record not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Repair record deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createRepair,
   getRepairs,
   getRepairById,
   updateRepair,
+  deleteRepair,
+  getNextRepairRrNumber,
 };

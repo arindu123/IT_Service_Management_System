@@ -20,6 +20,14 @@ const teamMembers = [
       "7+ years experience in IT infrastructure"
     ],
   },
+{
+    name: "Buddika thilakarathna",
+    role: "Network Hardware & Technical Assistant",
+    image: "buddika.jpeg",
+    description: "Maintains network infrastructure and assists with hardware repairs and upgrades.",
+    details: ["Switch/router support", "Cable management", "Technical assistance"],
+  },
+
   {
     name: "Muthupavani Silva",
     role: "Network Hardware & Technical Assistant",
@@ -27,13 +35,7 @@ const teamMembers = [
     description: "Supports network devices, hardware installation and technical troubleshooting.",
     details: ["Network setup", "Hardware maintenance", "On-site technical support"],
   },
-  {
-    name: "Priyanka Jayawardena",
-    role: "Network Hardware & Technical Assistant",
-    image: "priyanka.jpg",
-    description: "Maintains network infrastructure and assists with hardware repairs and upgrades.",
-    details: ["Switch/router support", "Cable management", "Technical assistance"],
-  },
+  
 ];
 
 function About() {

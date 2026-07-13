@@ -154,6 +154,15 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/repairs/:id/edit"
+        element={
+          <ProtectedRoute>
+            <CreateRepair />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
