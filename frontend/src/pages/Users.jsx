@@ -109,7 +109,7 @@ function Users() {
         }
       );
 
-      setSuccess("Password reset request approved. The user can now check the reset page for the link.");
+      setSuccess("Password reset request approved. The requester can continue on their reset page.");
       setResetRequests((currentRequests) =>
         currentRequests.map((request) =>
           request.id === requestId ? response.data.request : request
@@ -185,7 +185,7 @@ function Users() {
                 <th>Method</th>
                 <th>Status</th>
                 <th>Requested</th>
-                <th>Action / Link</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -228,22 +228,10 @@ function Users() {
                             Cancel
                           </button>
                         </div>
-                      ) : request.status === "approved" && request.resetLink ? (
-                        <div className="min-w-[280px] space-y-2">
-                          <a
-                            href={request.resetLink}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex rounded-lg bg-emerald-600 px-3 py-2 text-xs font-black text-white hover:bg-emerald-700"
-                          >
-                            Open reset link
-                          </a>
-                          <input
-                            value={request.resetLink}
-                            readOnly
-                            className="h-9 rounded-lg border-slate-300 px-3 text-xs font-semibold"
-                          />
-                        </div>
+                      ) : request.status === "approved" ? (
+                        <span className="text-sm font-semibold text-emerald-700">
+                          Approved. Link kept private.
+                        </span>
                       ) : (
                         <span className="text-sm font-semibold text-slate-500">
                           {request.status === "completed" ? "Password changed" : "No action available"}
