@@ -8,6 +8,7 @@ dotenv.config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const assetRoutes = require("./routes/assetRoutes");
+const assetIssueRoutes = require("./routes/assetIssueRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const repairRoutes = require("./routes/repairRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
@@ -25,6 +26,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/assets", assetRoutes);
+app.use("/api/asset-issues", assetIssueRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/repairs", repairRoutes);
 app.use("/api/inventory", inventoryRoutes);

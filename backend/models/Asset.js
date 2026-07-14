@@ -2,12 +2,15 @@ const mongoose = require("mongoose");
 
 const assetSchema = new mongoose.Schema(
   {
-    assetId: {
+    itemNumber: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
+
+    // Kept for existing ticket records that may still use the old asset ID.
+    assetId: { type: String, trim: true, unique: true, sparse: true },
 
     serialNumber: {
       type: String,
@@ -34,6 +37,10 @@ const assetSchema = new mongoose.Schema(
       trim: true,
     },
 
+    productYear: { type: Number, min: 1900, max: 2100 },
+
+    generation: { type: String, trim: true, default: "" },
+
     location: {
       type: String,
       required: true,
@@ -45,6 +52,14 @@ const assetSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+    ministry: { type: String, trim: true, default: "" },
+
+    userId: { type: String, trim: true, default: "" },
+
+    userName: { type: String, trim: true, default: "" },
+
+    issueDate: { type: Date },
 
     warrantyDate: {
       type: Date,

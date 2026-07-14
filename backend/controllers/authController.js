@@ -53,6 +53,7 @@ const serializeUser = (user) => ({
   employeeId: user.employeeId,
   role: user.role,
   department: user.department,
+  ministry: user.ministry,
   designation: user.designation,
   phone: user.phone,
   officeLocation: user.officeLocation,
@@ -162,7 +163,7 @@ const validatePasswordResetToken = async (token) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, employeeId, department, designation, phone, officeLocation } = req.body;
+    const { name, email, password, employeeId, department, ministry, designation, phone, officeLocation } = req.body;
 
     const normalizedEmail = String(email || "").trim().toLowerCase();
     const normalizedEmployeeId = normalizeEmployeeId(employeeId);
@@ -201,6 +202,7 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
       role: "department_user",
       department,
+      ministry,
       designation,
       phone,
       officeLocation,

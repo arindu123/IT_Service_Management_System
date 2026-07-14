@@ -8,15 +8,15 @@ const {
   deleteAsset,
 } = require("../controllers/assetController");
 
-const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 // All routes are protected
 router.use(protect);
 
-// Create asset - admin only
-router.post("/", authorizeRoles("admin"), createAsset);
+// Any signed-in user can register an asset.
+router.post("/", createAsset);
 
 // Get all assets
 router.get("/", getAssets);
@@ -24,10 +24,10 @@ router.get("/", getAssets);
 // Get single asset
 router.get("/:id", getAssetById);
 
-// Update asset - admin only
-router.put("/:id", authorizeRoles("admin"), updateAsset);
+// Any signed-in user can update an asset.
+router.put("/:id", updateAsset);
 
-// Delete asset - admin only
-router.delete("/:id", authorizeRoles("admin"), deleteAsset);
+// Any signed-in user can delete an asset.
+router.delete("/:id", deleteAsset);
 
 module.exports = router;

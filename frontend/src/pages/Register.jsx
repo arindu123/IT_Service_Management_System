@@ -55,6 +55,13 @@ const registerFields = [
     autoComplete: "organization",
   },
   {
+    id: "ministry",
+    label: "Ministry",
+    type: "text",
+    placeholder: "Enter ministry",
+    autoComplete: "organization",
+  },
+  {
     id: "designation",
     labelKey: "labels.designation",
     type: "text",
@@ -82,6 +89,7 @@ function Register() {
     password: "",
     role: "department_user",
     department: "",
+    ministry: "",
     designation: "",
     phone: "",
     officeLocation: "",
@@ -157,7 +165,7 @@ function Register() {
                         className="mb-2 text-[12px] normal-case tracking-normal text-slate-950"
                         htmlFor={field.id}
                       >
-                        {t(field.labelKey)}
+                        {field.label || t(field.labelKey)}
                       </label>
                       <input
                         id={field.id}
@@ -165,7 +173,7 @@ function Register() {
                         name={field.id}
                         value={formData[field.id]}
                         onChange={handleChange}
-                        placeholder={t(field.placeholderKey)}
+                        placeholder={field.placeholder || t(field.placeholderKey)}
                         autoComplete={field.autoComplete}
                         inputMode={field.inputMode}
                         className="h-12 rounded-full border-slate-300 px-5 font-medium shadow-none focus:border-[#1257ff] focus:ring-[#d9e6ff]"

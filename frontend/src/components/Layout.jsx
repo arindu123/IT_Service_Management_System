@@ -28,6 +28,9 @@ const icons = {
   repairs: (
     <path d="m14.7 6.3 3-3 3 3-3 3-3-3ZM3 17.6l7.8-7.8 3.4 3.4L6.4 21H3v-3.4Z" />
   ),
+  issues: (
+    <path d="M7 3h10v3H7V3Zm-2 5h14v13H5V8Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z" />
+  ),
   users: (
     <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21a7 7 0 0 1 14 0H2Zm14.5-1a8.8 8.8 0 0 0-2.1-4.9A5.5 5.5 0 0 1 22 20h-5.5Z" />
   ),
@@ -112,6 +115,9 @@ function Layout({ children }) {
     { path: "/dashboard", label: t("layout.nav.dashboard"), icon: "dashboard" },
     { path: "/account", label: t("layout.nav.account"), icon: "account", badge: notificationCount },
     { path: "/assets", label: t("layout.nav.assets"), icon: "assets" },
+    ...(hasRole(user, ["admin", "system_admin", "head_of_it"])
+      ? [{ path: "/asset-issues", label: "Item Issues", icon: "issues" }]
+      : []),
     { path: "/tickets", label: t("layout.nav.tickets"), icon: "tickets" },
     ...(hasRole(user, IT_INVENTORY_ROLES)
       ? [{ path: "/inventory", label: t("layout.nav.inventory"), icon: "inventory" }]

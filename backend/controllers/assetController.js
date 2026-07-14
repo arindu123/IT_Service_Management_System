@@ -1,23 +1,32 @@
 const Asset = require("../models/Asset");
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // Create new asset
 const createAsset = async (req, res) => {
   try {
     const {
+      itemNumber,
       assetId,
       serialNumber,
       deviceType,
       brand,
       model,
+      productYear,
+      generation,
       location,
       department,
+      ministry,
+      userId,
+      userName,
+      issueDate,
       warrantyDate,
       status,
       notes,
     } = req.body;
 
     if (
-      !assetId ||
+      !(itemNumber || assetId) ||
       !serialNumber ||
       !deviceType ||
       !brand ||
@@ -31,7 +40,7 @@ const createAsset = async (req, res) => {
     }
 
     const assetExists = await Asset.findOne({
-      $or: [{ assetId }, { serialNumber }],
+      $or: [{ itemNumber: itemNumber || assetId }, { serialNumber }],
     });
 
     if (assetExists) {
@@ -41,13 +50,20 @@ const createAsset = async (req, res) => {
     }
 
     const asset = await Asset.create({
-      assetId,
+      itemNumber: itemNumber || assetId,
+      assetId: assetId || itemNumber,
       serialNumber,
       deviceType,
       brand,
       model,
+      productYear,
+      generation,
       location,
       department,
+      ministry,
+      userId,
+      userName,
+      issueDate,
       warrantyDate,
       status,
       notes,
@@ -68,7 +84,16 @@ const createAsset = async (req, res) => {
 // Get all assets
 const getAssets = async (req, res) => {
   try {
-    const assets = await Asset.find().sort({ createdAt: -1 });
+    const search = String(req.query.search || "").trim();
+    const query = search
+      ? {
+          $or: [
+            "itemNumber", "assetId", "serialNumber", "deviceType", "brand", "model",
+            "userId", "userName", "department", "ministry", "location",
+          ].map((field) => ({ [field]: { $regex: escapeRegex(search), $options: "i" } })),
+        }
+      : {};
+    const assets = await Asset.find(query).sort({ createdAt: -1 });
 
     res.status(200).json({
       count: assets.length,

@@ -11,6 +11,7 @@ import Users from "./pages/Users";
 
 import Assets from "./pages/Assets";
 import AddAsset from "./pages/AddAsset";
+import AssetIssues from "./pages/AssetIssues";
 
 import Tickets from "./pages/Tickets";
 import CreateTicket from "./pages/CreateTicket";
@@ -90,6 +91,18 @@ function App() {
             <AddAsset />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/assets/:id/edit"
+        element={
+          <ProtectedRoute>
+            <AddAsset />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asset-issues"
+        element={<ProtectedRoute roles={["admin", "system_admin", "head_of_it"]}><AssetIssues /></ProtectedRoute>}
       />
 
       <Route

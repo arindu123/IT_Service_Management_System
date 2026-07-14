@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    ministry: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
     designation: {
       type: String,
       default: "",
