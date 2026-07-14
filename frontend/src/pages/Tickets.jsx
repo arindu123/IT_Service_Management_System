@@ -100,6 +100,7 @@ function Tickets() {
   const [tickets, setTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [actionTicket, setActionTicket] = useState(null);
+  const [evidenceTicket, setEvidenceTicket] = useState(null);
   const [activeStage, setActiveStage] = useState("submitted");
   const [filters, setFilters] = useState({ keyword: "", status: "" });
   const [statusForm, setStatusForm] = useState(initialStatusForm);
@@ -383,14 +384,19 @@ function Tickets() {
             <div className="flex flex-col gap-3 border-b border-[#edf1f8] pb-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="page-eyebrow mb-1">{t("labels.selectedRequest")}</p>
-                <h3 className="text-xl font-black text-[#1d2a55]">
+                <h3 className="text-2xl font-black tracking-tight text-[#101b42]">
                   {selectedTicket?.ticketId || t("tickets.noRequestSelected")}
                 </h3>
               </div>
               {selectedTicket && <Badge tone={statusTone(selectedTicket.status)}>{enumLabel("status", selectedTicket.status)}</Badge>}
             </div>
 
-            <SelectedRequestCard ticket={selectedTicket} enumLabel={enumLabel} t={t} />
+            <SelectedRequestCard
+              ticket={selectedTicket}
+              enumLabel={enumLabel}
+              onEvidenceClick={setEvidenceTicket}
+              t={t}
+            />
           </div>
 
           <form onSubmit={handleUpdateStatus} className="director-update-form">
@@ -622,6 +628,19 @@ function Tickets() {
           t={t}
         />
       )}
+
+      {evidenceTicket && (
+        <TicketEvidenceDialog
+          ticket={evidenceTicket}
+          actionLoading={actionLoading}
+          onClose={() => setEvidenceTicket(null)}
+          onViewEvidence={handleViewEvidence}
+          onDownloadEvidence={handleDownloadEvidence}
+          enumLabel={enumLabel}
+          formatDate={formatDate}
+          t={t}
+        />
+      )}
     </Layout>
   );
 }
@@ -646,7 +665,7 @@ function WorkflowStageTabs({ stages, activeStage, counts, onChange, ariaLabel })
   );
 }
 
-function SelectedRequestCard({ ticket, enumLabel, t }) {
+function SelectedRequestCard({ ticket, enumLabel, onEvidenceClick, t }) {
   if (!ticket) {
     return (
       <div className="selected-empty">
@@ -665,7 +684,12 @@ function SelectedRequestCard({ ticket, enumLabel, t }) {
       <div>
         <span>{t("labels.requestType")}</span>
         <strong>{enumLabel("requestType", ticket.requestType)}</strong>
-        <p>{enumLabel("hardwareCategory", ticket.hardwareCategory)} {ticket.currentAssetTag ? `| ${ticket.currentAssetTag}` : ""}</p>
+        <p>{ticket.requestedSpecification || t("common.notSpecified")}</p>
+      </div>
+      <div>
+        <span>{t("labels.hardwareCategory")}</span>
+        <strong>{enumLabel("hardwareCategory", ticket.hardwareCategory)}</strong>
+        <p>{ticket.currentAssetTag || t("common.notRecorded")}</p>
       </div>
       <div>
         <span>{t("labels.priority")}</span>
@@ -675,9 +699,89 @@ function SelectedRequestCard({ ticket, enumLabel, t }) {
         <span>{t("labels.issueDescription")}</span>
         <p className="selected-issue">{ticket.issueDescription}</p>
       </div>
-      <div>
+      <button type="button" className="selected-evidence-tile" onClick={() => onEvidenceClick(ticket)}>
         <span>{t("labels.evidence")}</span>
         <strong>{t("common.fileCount", { count: ticket.attachments?.length || 0 })}</strong>
+        <p>{ticket.attachments?.length ? t("common.view") : t("tickets.noEvidenceDialog")}</p>
+      </button>
+    </div>
+  );
+}
+
+function TicketEvidenceDialog({
+  ticket,
+  actionLoading,
+  onClose,
+  onViewEvidence,
+  onDownloadEvidence,
+  enumLabel,
+  formatDate,
+  t,
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl shadow-slate-950/30">
+        <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-start">
+          <div>
+            <p className="page-eyebrow mb-1">{t("labels.evidence")}</p>
+            <h3 className="text-xl font-black text-slate-950">{ticket.ticketId}</h3>
+            <p className="mt-1 text-sm font-semibold text-slate-600">
+              {enumLabel("requestType", ticket.requestType)} | {enumLabel("hardwareCategory", ticket.hardwareCategory)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-10 w-10 rounded-lg border border-slate-200 text-lg font-black text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+            aria-label={t("tickets.closeRequestOptions")}
+          >
+            x
+          </button>
+        </div>
+
+        <div className="p-5">
+          {ticket.attachments?.length > 0 ? (
+            <div className="space-y-3">
+              {ticket.attachments.map((attachment) => (
+                <div key={attachment._id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-11 w-14 shrink-0 items-center justify-center rounded-md bg-white text-xs font-black text-slate-500 shadow-sm">
+                      {getFileKind(attachment.mimeType)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black text-slate-900">{attachment.originalName}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">
+                        {formatFileSize(attachment.size)} | {formatDate(attachment.uploadedAt || attachment.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onViewEvidence(ticket._id, attachment._id)}
+                      disabled={actionLoading}
+                      className="rounded-md bg-slate-950 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {t("common.view")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDownloadEvidence(ticket._id, attachment._id, attachment.originalName)}
+                      disabled={actionLoading}
+                      className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {t("common.download")}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-8 text-center text-sm font-semibold text-slate-500">
+              {t("tickets.noEvidenceDialog")}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

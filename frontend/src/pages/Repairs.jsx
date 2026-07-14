@@ -30,6 +30,7 @@ function Repairs() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState("");
+  const [selectedRepair, setSelectedRepair] = useState(null);
 
   const filteredRepairs = repairs.filter((r) =>
     Object.values(r).some(
@@ -79,6 +80,9 @@ function Repairs() {
       });
 
       setRepairs((currentRepairs) => currentRepairs.filter((item) => item._id !== repair._id));
+      if (selectedRepair?._id === repair._id) {
+        setSelectedRepair(null);
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete repair record");
     } finally {
@@ -117,60 +121,127 @@ function Repairs() {
         ) : filteredRepairs.length === 0 ? (
           <div className="repair-empty-state">{t("repairs.empty")}</div>
         ) : (
-          <div className="repair-card-list">
+          <div className="repair-row-list">
             {filteredRepairs.map((repair) => (
-              <article key={repair._id} className="repair-card">
-                <div className="repair-card-header">
-                  <div className="repair-identity">
-                    <span className="repair-mark">{getRepairMark(repair.type)}</span>
-                    <div className="repair-card-title">
-                      <p>Repair Record</p>
-                      <h3>{formatValue(repair.rrNumber)}</h3>
-                      <span>{formatNameValue(repair.model)} | {formatValue(repair.serialNumber)}</span>
-                    </div>
+              <article key={repair._id} className="repair-row">
+                <div className="repair-row-main">
+                  <span className="repair-mark">{getRepairMark(repair.type)}</span>
+                  <div className="repair-row-id">
+                    <span>Repair Record</span>
+                    <strong>{formatValue(repair.rrNumber)}</strong>
                   </div>
-
-                  <div className="repair-actions">
-                    <button
-                      type="button"
-                      className="repair-action-button"
-                      onClick={() => navigate(`/repairs/${repair._id}/edit`)}
-                    >
-                      Update
-                    </button>
-                    <button
-                      type="button"
-                      className="repair-action-button repair-action-danger"
-                      onClick={() => handleDeleteRepair(repair)}
-                      disabled={deletingId === repair._id}
-                    >
-                      {deletingId === repair._id ? t("common.deleting") : t("common.delete")}
-                    </button>
+                  <div className="repair-row-field">
+                    <span>Type</span>
+                    <strong>{formatNameValue(repair.type)}</strong>
+                  </div>
+                  <div className="repair-row-field">
+                    <span>Model</span>
+                    <strong>{formatNameValue(repair.model)}</strong>
+                  </div>
+                  <div className="repair-row-field">
+                    <span>Serial</span>
+                    <strong>{formatValue(repair.serialNumber)}</strong>
+                  </div>
+                  <div className="repair-row-field">
+                    <span>User</span>
+                    <strong>{formatValue(repair.userName)}</strong>
+                  </div>
+                  <div className="repair-row-field">
+                    <span>Received</span>
+                    <strong>{formatDate(repair.receivedDate)}</strong>
                   </div>
                 </div>
 
-                <div className="repair-summary-grid">
-                  <SummaryTile label="Type" value={formatNameValue(repair.type)} />
-                  <SummaryTile label="User" value={formatValue(repair.userName)} />
-                  <SummaryTile label="Received" value={formatDate(repair.receivedDate)} />
-                </div>
-
-                <div className="repair-detail-grid">
-                  {REPAIR_FIELDS.map((field) => (
-                    <DetailItem
-                      key={field.key}
-                      label={field.label}
-                      value={(field.format || formatValue)(repair[field.key])}
-                      wide={field.wide}
-                    />
-                  ))}
+                <div className="repair-actions">
+                  <button
+                    type="button"
+                    className="repair-action-button repair-action-view"
+                    onClick={() => setSelectedRepair(repair)}
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    className="repair-action-button"
+                    onClick={() => navigate(`/repairs/${repair._id}/edit`)}
+                  >
+                    Update
+                  </button>
+                  <button
+                    type="button"
+                    className="repair-action-button repair-action-danger"
+                    onClick={() => handleDeleteRepair(repair)}
+                    disabled={deletingId === repair._id}
+                  >
+                    {deletingId === repair._id ? t("common.deleting") : t("common.delete")}
+                  </button>
                 </div>
               </article>
             ))}
           </div>
         )}
       </section>
+
+      {selectedRepair && (
+        <RepairDetailModal
+          repair={selectedRepair}
+          onClose={() => setSelectedRepair(null)}
+          onEdit={() => navigate(`/repairs/${selectedRepair._id}/edit`)}
+          onDelete={() => handleDeleteRepair(selectedRepair)}
+          deleting={deletingId === selectedRepair._id}
+          t={t}
+        />
+      )}
     </Layout>
+  );
+}
+
+function RepairDetailModal({ repair, onClose, onEdit, onDelete, deleting, t }) {
+  return (
+    <div className="repair-modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section className="repair-modal" role="dialog" aria-modal="true" aria-labelledby="repairDetailTitle" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="repair-modal-header">
+          <div className="repair-identity">
+            <span className="repair-mark">{getRepairMark(repair.type)}</span>
+            <div className="repair-card-title">
+              <p>Repair Details</p>
+              <h3 id="repairDetailTitle">{formatValue(repair.rrNumber)}</h3>
+              <span>{formatNameValue(repair.type)} | {formatNameValue(repair.model)}</span>
+            </div>
+          </div>
+
+          <button type="button" className="repair-modal-close" onClick={onClose} aria-label="Close repair details">
+            Close
+          </button>
+        </div>
+
+        <div className="repair-modal-summary">
+          <SummaryTile label="User" value={formatValue(repair.userName)} />
+          <SummaryTile label="Office" value={formatValue(repair.office)} />
+          <SummaryTile label="Received" value={formatDate(repair.receivedDate)} />
+        </div>
+
+        <div className="repair-detail-grid repair-modal-details">
+          {REPAIR_FIELDS.map((field) => (
+            <DetailItem
+              key={field.key}
+              label={field.label}
+              value={(field.format || formatValue)(repair[field.key])}
+              wide={field.wide}
+            />
+          ))}
+        </div>
+
+        <div className="repair-modal-actions">
+          <button type="button" className="repair-action-button" onClick={onEdit}>
+            Update
+          </button>
+          <button type="button" className="repair-action-button repair-action-danger" onClick={onDelete} disabled={deleting}>
+            {deleting ? t("common.deleting") : t("common.delete")}
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 

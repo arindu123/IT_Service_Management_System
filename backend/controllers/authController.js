@@ -386,9 +386,7 @@ const getPasswordResetRequests = async (req, res) => {
 
     res.status(200).json({
       count: requests.length,
-      requests: requests.map((request) =>
-        serializeResetRequest(request, { includeResetLink: request.status === "approved" })
-      ),
+      requests: requests.map((request) => serializeResetRequest(request)),
     });
   } catch (error) {
     res.status(500).json({
@@ -425,8 +423,8 @@ const approvePasswordResetRequest = async (req, res) => {
     await request.populate("approvedBy", "name employeeId");
 
     res.status(200).json({
-      message: "Password reset request approved. Reset link is ready for the user.",
-      request: serializeResetRequest(request, { includeResetLink: true }),
+      message: "Password reset request approved.",
+      request: serializeResetRequest(request),
     });
   } catch (error) {
     res.status(500).json({
