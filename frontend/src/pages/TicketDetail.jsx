@@ -9,7 +9,7 @@ function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
-  const { enumLabel, formatDate, formatDateTime, t } = useTranslation();
+  const { enumLabel, formatDate, t } = useTranslation();
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const [ticket, setTicket] = useState(null);
@@ -608,19 +608,6 @@ function DetailItem({ label, value, wide = false }) {
       <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
     </div>
   );
-}
-
-function formatLabel(value = "") {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function formatDate(value) {
-  if (!value) return "N/A";
-  return new Date(value).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function formatFileSize(bytes = 0) {

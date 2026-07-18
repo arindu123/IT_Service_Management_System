@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap");
+
+:root {
+  --gov-color-primary-50: #eef4ff;
+  --gov-color-primary-100: #dbe7ff;
+  --gov-color-primary-600: #244b8f;
+  --gov-color-primary-700: #183b73;
+  --gov-color-primary-800: #122e5b;
+  --gov-color-primary-900: #0b2145;
+  --gov-color-background: #f3f6fb;
+  --gov-color-surface: #ffffff;
+  --gov-color-surface-muted: #f8fafc;
+  --gov-color-border: #d8e0ec;
+  --gov-color-border-strong: #b8c4d6;
+  --gov-color-text: #152238;
+  --gov-color-text-muted: #5b6980;
+  --gov-color-text-inverse: #ffffff;
+  --gov-color-success: #137a52;
+  --gov-color-success-soft: #e8f7f0;
+  --gov-color-warning: #a96308;
+  --gov-color-warning-soft: #fff6df;
+  --gov-color-danger: #b4232f;
+  --gov-color-danger-soft: #fff0f1;
+  --gov-color-info: #1d5fa7;
+  --gov-color-info-soft: #eaf3ff;
+
+  --gov-font-sans: "Inter", "Noto Sans Sinhala", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
+  --gov-font-sinhala: "Noto Sans Sinhala", "Inter", sans-serif;
+  --gov-font-tamil: "Noto Sans Tamil", "Inter", sans-serif;
+
+  --gov-space-1: 4px;
+  --gov-space-2: 8px;
+  --gov-space-3: 12px;
+  --gov-space-4: 16px;
+  --gov-space-6: 24px;
+  --gov-space-8: 32px;
+
+  --gov-radius-sm: 6px;
+  --gov-radius-md: 10px;
+  --gov-radius-lg: 14px;
+  --gov-shadow-sm: 0 1px 2px rgb(15 31 54 / 8%);
+  --gov-shadow-md: 0 8px 24px rgb(15 31 54 / 12%);
+  --gov-focus-ring: 0 0 0 3px rgb(36 75 143 / 22%);
+  --gov-transition: 160ms ease;
+}
+
+:lang(si) { font-family: var(--gov-font-sinhala); }
+:lang(ta) { font-family: var(--gov-font-tamil); }
+

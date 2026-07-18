@@ -662,6 +662,37 @@
     @apply grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2;
   }
 
+  .asset-form-readable label {
+    @apply mb-2 text-xs font-black tracking-[0.1em] text-slate-800;
+  }
+
+  .asset-form-readable input,
+  .asset-form-readable textarea,
+  .asset-form-readable select {
+    @apply min-h-12 border-slate-300 bg-white text-[15px] font-bold leading-6 text-slate-950 placeholder:font-semibold placeholder:text-slate-500;
+  }
+
+  .asset-form-readable input:disabled,
+  .asset-form-readable input[readonly] {
+    @apply border-slate-300 bg-slate-100 text-slate-700 opacity-100;
+  }
+
+  .asset-form-readable input[type="file"] {
+    @apply cursor-pointer py-2 text-sm;
+  }
+
+  .asset-form-readable .field {
+    @apply rounded-xl border border-transparent p-1 transition;
+  }
+
+  .asset-form-readable .field:focus-within {
+    @apply border-blue-100 bg-blue-50/40;
+  }
+
+  .asset-form-readable .form-actions {
+    @apply mt-4 border-slate-200 bg-slate-50 px-4 py-4 md:col-span-2 xl:col-span-3 rounded-xl;
+  }
+
   .form-actions {
     @apply mt-2 flex flex-col gap-3 border-t border-[#edf1f8] pt-4 sm:flex-row sm:items-center sm:justify-end md:col-span-2;
   }

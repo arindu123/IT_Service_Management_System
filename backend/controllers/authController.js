@@ -1,9 +1,15 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const User = require("../models/User");
 const PasswordResetRequest = require("../models/PasswordResetRequest");
+const { sendPasswordResetEmail } = require("../services/emailService");
 
 const RESET_TOKEN_WINDOW_MS = 24 * 60 * 60 * 1000;
+const EMAIL_RESET_COOLDOWN_MS = 60 * 1000;
+const EMAIL_RESET_NEUTRAL_MESSAGE = "If an eligible account exists, a password reset link will be sent shortly.";
+const hashResetToken = (token) => crypto.createHash("sha256").update(String(token)).digest("hex");
+const getEmailResetTtlMinutes = () => Math.max(1, Number(process.env.RESET_TOKEN_TTL_MINUTES) || 15);
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -15,7 +21,7 @@ const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const normalizeEmployeeId = (employeeId) => String(employeeId || "").trim();
 
-const isEmailResetConfigured = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_USER);
+const isEmailResetConfigured = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 
 const maskEmail = (email = "") => {
   const [name = "", domain = ""] = email.split("@");
@@ -63,7 +69,6 @@ const serializeResetUser = (user) => ({
   id: user._id,
   name: user.name,
   employeeId: user.employeeId,
-  email: user.email,
   emailMasked: maskEmail(user.email),
   department: user.department,
   designation: user.designation,
@@ -470,6 +475,12 @@ const cancelPasswordResetRequest = async (req, res) => {
 
 const getResetTokenStatus = async (req, res) => {
   try {
+    const tokenHash = hashResetToken(req.params.token);
+    const emailUser = await User.findOne({ resetPasswordTokenHash: tokenHash, resetPasswordExpiresAt: { $gt: new Date() } })
+      .select("+resetPasswordTokenHash +resetPasswordExpiresAt name email employeeId department designation");
+    if (emailUser) {
+      return res.status(200).json({ valid: true, user: serializeResetUser(emailUser), expiresAt: emailUser.resetPasswordExpiresAt });
+    }
     const request = await validatePasswordResetToken(req.params.token);
 
     res.status(200).json({
@@ -482,6 +493,65 @@ const getResetTokenStatus = async (req, res) => {
       valid: false,
       message: "Reset link is invalid or expired",
     });
+  }
+};
+
+const requestEmailPasswordReset = async (req, res) => {
+  const normalizedEmployeeId = normalizeEmployeeId(req.body.employeeId);
+  if (!normalizedEmployeeId) return res.status(400).json({ message: "Employee ID is required" });
+
+  try {
+    const user = await findUserByEmployeeId(normalizedEmployeeId)
+      .select("+resetPasswordTokenHash +resetPasswordExpiresAt +resetPasswordRequestedAt");
+    if (!user?.email) return res.status(200).json({ message: EMAIL_RESET_NEUTRAL_MESSAGE });
+
+    if (user.resetPasswordRequestedAt && Date.now() - user.resetPasswordRequestedAt.getTime() < EMAIL_RESET_COOLDOWN_MS) {
+      return res.status(200).json({ message: EMAIL_RESET_NEUTRAL_MESSAGE });
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const ttlMinutes = getEmailResetTtlMinutes();
+    user.resetPasswordTokenHash = hashResetToken(rawToken);
+    user.resetPasswordExpiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
+    user.resetPasswordRequestedAt = new Date();
+    await user.save();
+
+    const frontendUrl = getFrontendUrl();
+    const resetUrl = `${frontendUrl}/reset-password/${rawToken}`;
+    try {
+      await sendPasswordResetEmail({ to: user.email, resetUrl, ttlMinutes });
+    } catch {
+      user.resetPasswordTokenHash = undefined;
+      user.resetPasswordExpiresAt = undefined;
+      user.resetPasswordRequestedAt = undefined;
+      await user.save();
+    }
+    return res.status(200).json({ message: EMAIL_RESET_NEUTRAL_MESSAGE });
+  } catch {
+    return res.status(200).json({ message: EMAIL_RESET_NEUTRAL_MESSAGE });
+  }
+};
+
+const completeEmailPasswordReset = async (req, res) => {
+  try {
+    const { newPassword, confirmPassword } = req.body;
+    if (!newPassword || newPassword !== confirmPassword) return res.status(400).json({ message: "Passwords do not match" });
+    if (String(newPassword).length < 6) return res.status(400).json({ message: "Password must be at least 6 characters" });
+
+    const user = await User.findOne({
+      resetPasswordTokenHash: hashResetToken(req.params.token),
+      resetPasswordExpiresAt: { $gt: new Date() },
+    }).select("+resetPasswordTokenHash +resetPasswordExpiresAt +resetPasswordRequestedAt password");
+    if (!user) return res.status(400).json({ message: "Reset link is invalid or expired" });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordTokenHash = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    user.resetPasswordRequestedAt = undefined;
+    await user.save();
+    return res.status(200).json({ message: "Password reset successful. You can sign in with your new password now." });
+  } catch {
+    return res.status(400).json({ message: "Reset link is invalid or expired" });
   }
 };
 
@@ -596,6 +666,9 @@ module.exports = {
   cancelPasswordResetRequest,
   getResetTokenStatus,
   completePasswordReset,
+  requestEmailPasswordReset,
+  completeEmailPasswordReset,
   getUsers,
   updateUserRole,
+  passwordResetTestUtils: { hashResetToken, getEmailResetTtlMinutes, EMAIL_RESET_NEUTRAL_MESSAGE },
 };

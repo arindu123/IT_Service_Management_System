@@ -92,6 +92,7 @@ export const translations = {
       byPerson: "{date} by {person}",
       expectedOn: "Expected {date}",
       ok: "OK",
+      networkOperations: "Network operations", networkMonitoring: "Network Monitoring", networkDescription: "Register LAN devices, monitor availability from the backend, and track location-based incidents.", addDevice: "Add Device", total: "Total", online: "Online", warning: "Warning", offline: "Offline", paused: "Paused", incidents: "Incidents", registeredDevices: "Registered devices", respondingNow: "Responding now", belowThreshold: "Below threshold", incidentThreshold: "Incident threshold", skippedScheduler: "Skipped by scheduler", openAlerts: "Open alerts", allStatuses: "All statuses", allDeviceTypes: "All device types",
     },
     labels: {
       employeeId: "Employee ID",
@@ -369,6 +370,13 @@ export const translations = {
       newEyebrow: "New asset",
       addTitle: "Add Asset",
       addDescription: "Register a new IT device or equipment item in the asset register.",
+      display: "Display", tableView: "Table", boxView: "Box", itemNumber: "Item number", device: "Device", currentUser: "Current user", details: "Details", hide: "Hide", noSearchResults: "No assets match this search.",
+    },
+    assetIssues: {
+      eyebrow: "Asset custody", title: "Issue, Transfer and Destroy Assets", description: "Assign registered assets to registered users, move custody between users, and keep an action trail.",
+      searchUsers: "Search registered users", searchUsersPlaceholder: "Search by employee ID, name, department or email", selectUser: "Select user", userDetails: "User details", departmentMinistry: "Department / ministry", autoFilled: "Auto-filled",
+      searchAssets: "Search available assets", searchAssetsPlaceholder: "Search item number, serial, brand or model", selectAsset: "Select asset", selectAvailableAsset: "Select available asset", assetDetails: "Asset details", issueDate: "Issue date", issueNotes: "Issue notes", issueNotesPlaceholder: "Optional remarks, reference number or handover note", issuing: "Issuing...", issueAsset: "Issue Asset",
+      transferAsset: "Transfer asset", searchNewUser: "Search new user", newUser: "New user", selectNewUser: "Select new user", transferNotes: "Transfer notes", optional: "Optional", transfer: "Transfer", currentlyIssued: "currently issued", records: "Asset Custody Records", asset: "Asset", status: "Status", issuedBy: "Issued by", lastAction: "Last action", actions: "Actions", noRecords: "No asset issue records yet.", remove: "Remove", destroy: "Destroy", closed: "Closed",
     },
     inventory: {
       loadError: "Failed to load inventory",
@@ -590,9 +598,11 @@ export const translations = {
       },
       assetStatus: {
         active: "Active",
+        issued: "Issued",
         under_repair: "Under Repair",
         damaged: "Damaged",
         retired: "Retired",
+        destroyed: "Destroyed",
       },
       requestType: {
         fault: "Faulty Hardware",
@@ -737,6 +747,7 @@ export const translations = {
       byPerson: "{date} - {person} විසින්",
       expectedOn: "{date} අපේක්ෂිතයි",
       ok: "හරි",
+      networkOperations: "ජාල මෙහෙයුම්", networkMonitoring: "ජාල නිරීක්ෂණය", networkDescription: "LAN උපාංග ලියාපදිංචි කර, පසුබිමෙන් ලබාගත හැකි බව නිරීක්ෂණය කර ස්ථාන අනුව සිදුවීම් සටහන් කරන්න.", addDevice: "උපාංගය එක් කරන්න", total: "එකතුව", online: "මාර්ගගත", warning: "අවවාදය", offline: "අක්‍රිය", paused: "නවතා ඇත", incidents: "සිදුවීම්", registeredDevices: "ලියාපදිංචි උපාංග", respondingNow: "දැනට ප්‍රතිචාර දක්වයි", belowThreshold: "සීමාවට පහළ", incidentThreshold: "සිදුවීම් සීමාව", skippedScheduler: "උපලේඛකයෙන් මඟහැර ඇත", openAlerts: "විවෘත ඇඟවීම්", allStatuses: "සියලු තත්ත්ව", allDeviceTypes: "සියලු උපාංග වර්ග",
     },
     labels: {
       employeeId: "සේවක අංකය",
@@ -1014,6 +1025,13 @@ export const translations = {
       newEyebrow: "නව වත්කම",
       addTitle: "වත්කම එක් කරන්න",
       addDescription: "නව IT උපාංගයක් හෝ උපකරණයක් වත්කම් ලේඛනයට එක් කරන්න.",
+      display: "දර්ශනය", tableView: "වගුව", boxView: "කාඩ්", itemNumber: "අයිතම අංකය", device: "උපාංගය", currentUser: "දැනට භාවිතා කරන්නා", details: "විස්තර", hide: "සඟවන්න", noSearchResults: "මෙම සෙවුමට ගැළපෙන වත්කම් නැත.",
+    },
+    assetIssues: {
+      eyebrow: "වත්කම් භාරකාරත්වය", title: "වත්කම් නිකුත් කිරීම, මාරු කිරීම සහ විනාශ කිරීම", description: "ලියාපදිංචි වත්කම් පරිශීලකයන්ට පවරා, භාරකාරත්වය මාරු කර ක්‍රියා සටහනක් පවත්වා ගන්න.",
+      searchUsers: "ලියාපදිංචි පරිශීලකයන් සොයන්න", searchUsersPlaceholder: "සේවක අංකය, නම, අංශය හෝ ඊමේල් මඟින් සොයන්න", selectUser: "පරිශීලකයා තෝරන්න", userDetails: "පරිශීලක විස්තර", departmentMinistry: "අංශය / අමාත්‍යාංශය", autoFilled: "ස්වයංක්‍රීයව පුරවයි",
+      searchAssets: "ලබාගත හැකි වත්කම් සොයන්න", searchAssetsPlaceholder: "අයිතම අංකය, අනුක්‍රමික අංකය, වෙළඳ නාමය හෝ මාදිලිය සොයන්න", selectAsset: "වත්කම තෝරන්න", selectAvailableAsset: "ලබාගත හැකි වත්කම තෝරන්න", assetDetails: "වත්කම් විස්තර", issueDate: "නිකුත් කළ දිනය", issueNotes: "නිකුත් කිරීමේ සටහන්", issueNotesPlaceholder: "විකල්ප සටහනක්, යොමු අංකයක් හෝ භාරදීමේ සටහනක්", issuing: "නිකුත් කරමින්...", issueAsset: "වත්කම නිකුත් කරන්න",
+      transferAsset: "වත්කම මාරු කරන්න", searchNewUser: "නව පරිශීලකයා සොයන්න", newUser: "නව පරිශීලකයා", selectNewUser: "නව පරිශීලකයා තෝරන්න", transferNotes: "මාරු කිරීමේ සටහන්", optional: "විකල්ප", transfer: "මාරු කරන්න", currentlyIssued: "දැනට නිකුත් කර ඇත", records: "වත්කම් භාරකාරත්ව වාර්තා", asset: "වත්කම", status: "තත්ත්වය", issuedBy: "නිකුත් කළේ", lastAction: "අවසන් ක්‍රියාව", actions: "ක්‍රියා", noRecords: "තවම වත්කම් නිකුත් කිරීමේ වාර්තා නැත.", remove: "ඉවත් කරන්න", destroy: "විනාශ කරන්න", closed: "වසා ඇත",
     },
     inventory: {
       loadError: "තොගය පූරණය කිරීමට නොහැකි විය",
@@ -1235,9 +1253,11 @@ export const translations = {
       },
       assetStatus: {
         active: "ක්‍රියාකාරී",
+        issued: "නිකුත් කළ",
         under_repair: "අලුත්වැඩියාවේ",
         damaged: "හානි වූ",
         retired: "විශ්‍රාමික",
+        destroyed: "විනාශ කළ",
       },
       requestType: {
         fault: "දෝෂ සහිත හාඩ්වෙයා",
@@ -1382,6 +1402,7 @@ export const translations = {
       byPerson: "{date} - {person}",
       expectedOn: "{date} எதிர்பார்க்கப்படுகிறது",
       ok: "சரி",
+      networkOperations: "பிணைய செயல்பாடுகள்", networkMonitoring: "பிணைய கண்காணிப்பு", networkDescription: "LAN சாதனங்களை பதிவு செய்து, பின்னணியில் கிடைப்பதை கண்காணித்து, இட அடிப்படையிலான நிகழ்வுகளை பதிவு செய்யவும்.", addDevice: "சாதனத்தைச் சேர்க்கவும்", total: "மொத்தம்", online: "ஆன்லைன்", warning: "எச்சரிக்கை", offline: "ஆஃப்லைன்", paused: "இடைநிறுத்தப்பட்டது", incidents: "நிகழ்வுகள்", registeredDevices: "பதிவு செய்யப்பட்ட சாதனங்கள்", respondingNow: "இப்போது பதிலளிக்கிறது", belowThreshold: "வரம்புக்குக் கீழ்", incidentThreshold: "நிகழ்வு வரம்பு", skippedScheduler: "அட்டவணையால் தவிர்க்கப்பட்டது", openAlerts: "திறந்த எச்சரிக்கைகள்", allStatuses: "அனைத்து நிலைகள்", allDeviceTypes: "அனைத்து சாதன வகைகள்",
     },
     labels: {
       employeeId: "ஊழியர் ID",
@@ -1659,6 +1680,13 @@ export const translations = {
       newEyebrow: "புதிய சொத்து",
       addTitle: "சொத்தைச் சேர்க்கவும்",
       addDescription: "புதிய IT சாதனம் அல்லது உபகரணத்தை சொத்து பதிவில் சேர்க்கவும்.",
+      display: "காட்சி", tableView: "அட்டவணை", boxView: "பெட்டி", itemNumber: "பொருள் எண்", device: "சாதனம்", currentUser: "தற்போதைய பயனர்", details: "விவரங்கள்", hide: "மறை", noSearchResults: "இந்த தேடலுக்கு பொருந்தும் சொத்துகள் இல்லை.",
+    },
+    assetIssues: {
+      eyebrow: "சொத்து பாதுகாப்பு", title: "சொத்துகளை வழங்குதல், மாற்றுதல் மற்றும் அழித்தல்", description: "பதிவு செய்யப்பட்ட சொத்துகளை பயனர்களுக்கு ஒதுக்கி, பாதுகாப்பை மாற்றி, செயல்பாட்டுப் பதிவை பராமரிக்கவும்.",
+      searchUsers: "பதிவு செய்யப்பட்ட பயனர்களைத் தேடுக", searchUsersPlaceholder: "ஊழியர் எண், பெயர், துறை அல்லது மின்னஞ்சல் மூலம் தேடுக", selectUser: "பயனரைத் தேர்ந்தெடுக்கவும்", userDetails: "பயனர் விவரங்கள்", departmentMinistry: "துறை / அமைச்சகம்", autoFilled: "தானாக நிரப்பப்படும்",
+      searchAssets: "கிடைக்கும் சொத்துகளைத் தேடுக", searchAssetsPlaceholder: "பொருள் எண், தொடர் எண், பிராண்ட் அல்லது மாதிரியைத் தேடுக", selectAsset: "சொத்தைத் தேர்ந்தெடுக்கவும்", selectAvailableAsset: "கிடைக்கும் சொத்தைத் தேர்ந்தெடுக்கவும்", assetDetails: "சொத்து விவரங்கள்", issueDate: "வழங்கிய தேதி", issueNotes: "வழங்கல் குறிப்புகள்", issueNotesPlaceholder: "விருப்பக் குறிப்பு, குறிப்பு எண் அல்லது ஒப்படைப்பு குறிப்பு", issuing: "வழங்கப்படுகிறது...", issueAsset: "சொத்தை வழங்குக",
+      transferAsset: "சொத்தை மாற்றுக", searchNewUser: "புதிய பயனரைத் தேடுக", newUser: "புதிய பயனர்", selectNewUser: "புதிய பயனரைத் தேர்ந்தெடுக்கவும்", transferNotes: "மாற்றல் குறிப்புகள்", optional: "விருப்பமானது", transfer: "மாற்றுக", currentlyIssued: "தற்போது வழங்கப்பட்டவை", records: "சொத்து பாதுகாப்புப் பதிவுகள்", asset: "சொத்து", status: "நிலை", issuedBy: "வழங்கியவர்", lastAction: "கடைசி செயல்", actions: "செயல்கள்", noRecords: "சொத்து வழங்கல் பதிவுகள் இன்னும் இல்லை.", remove: "அகற்றுக", destroy: "அழிக்கவும்", closed: "மூடப்பட்டது",
     },
     inventory: {
       loadError: "இருப்பை ஏற்ற முடியவில்லை",
@@ -1880,9 +1908,11 @@ export const translations = {
       },
       assetStatus: {
         active: "செயலில்",
+        issued: "வழங்கப்பட்டது",
         under_repair: "பழுதுபார்ப்பில்",
         damaged: "சேதமடைந்தது",
         retired: "ஓய்வு பெற்றது",
+        destroyed: "அழிக்கப்பட்டது",
       },
       requestType: {
         fault: "பழுதான வன்பொருள்",

@@ -5,10 +5,11 @@ const {
   getAssets,
   getAssetById,
   updateAsset,
+  destroyAsset,
   deleteAsset,
 } = require("../controllers/assetController");
 
-const { protect } = require("../middleware/authMiddleware");
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -23,6 +24,12 @@ router.get("/", getAssets);
 
 // Get single asset
 router.get("/:id", getAssetById);
+
+router.put(
+  "/:id/destroy",
+  authorizeRoles("admin", "system_admin", "head_of_it"),
+  destroyAsset
+);
 
 // Any signed-in user can update an asset.
 router.put("/:id", updateAsset);

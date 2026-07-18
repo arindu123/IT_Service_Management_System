@@ -13,15 +13,14 @@ const ticketRoutes = require("./routes/ticketRoutes");
 const repairRoutes = require("./routes/repairRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-
-// Connect Database
-connectDB();
+const networkRoutes = require("./routes/networkRoutes");
+const { startNetworkMonitorScheduler } = require("./services/networkMonitorScheduler");
 
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -31,6 +30,7 @@ app.use("/api/tickets", ticketRoutes);
 app.use("/api/repairs", repairRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/network", networkRoutes);
 
 
 // Test route
@@ -41,7 +41,14 @@ app.get("/", (req, res) => {
 // Port
 const PORT = process.env.PORT || 5000;
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start server after MongoDB is ready so background workers can safely use models.
+const startServer = async () => {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    startNetworkMonitorScheduler();
+  });
+};
+
+startServer();

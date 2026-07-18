@@ -88,8 +88,8 @@ export function StatCard({ label, value, tone = "blue", meta }) {
   );
 }
 
-export function FormPanel({ children }) {
-  return <section className="form-panel">{children}</section>;
+export function FormPanel({ children, className = "" }) {
+  return <section className={`form-panel ${className}`.trim()}>{children}</section>;
 }
 
 export function FormActions({ children }) {

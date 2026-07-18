@@ -23,9 +23,11 @@ const getDashboardSummary = async (req, res) => {
     const closedTickets = await Ticket.countDocuments({ status: "closed" });
 
     const activeAssets = await Asset.countDocuments({ status: "active" });
+    const issuedAssets = await Asset.countDocuments({ status: "issued" });
     const underRepairAssets = await Asset.countDocuments({ status: "under_repair" });
     const damagedAssets = await Asset.countDocuments({ status: "damaged" });
     const retiredAssets = await Asset.countDocuments({ status: "retired" });
+    const destroyedAssets = await Asset.countDocuments({ status: "destroyed" });
 
     const lowStockItems = await Inventory.find({
       $expr: { $lte: ["$quantity", "$reorderLevel"] },
@@ -38,9 +40,11 @@ const getDashboardSummary = async (req, res) => {
       assets: {
         total: totalAssets,
         active: activeAssets,
+        issued: issuedAssets,
         underRepair: underRepairAssets,
         damaged: damagedAssets,
         retired: retiredAssets,
+        destroyed: destroyedAssets,
       },
       tickets: {
         total: totalTickets,

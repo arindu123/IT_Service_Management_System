@@ -9,10 +9,13 @@ const {
   cancelPasswordResetRequest,
   getResetTokenStatus,
   completePasswordReset,
+  requestEmailPasswordReset,
+  completeEmailPasswordReset,
   getUsers,
   updateUserRole,
 } = require("../controllers/authController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+const passwordResetRateLimit = require("../middleware/passwordResetRateLimit");
 
 const router = express.Router();
 
@@ -23,11 +26,12 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 // Forgot password route
-router.post("/forgot-password", requestPasswordReset);
+router.post("/forgot-password", passwordResetRateLimit, requestEmailPasswordReset);
 router.post("/password-reset/check", checkPasswordResetStatus);
 router.post("/password-reset/request", requestPasswordReset);
 router.get("/password-reset/token/:token", getResetTokenStatus);
 router.post("/password-reset/complete", completePasswordReset);
+router.post("/reset-password/:token", completeEmailPasswordReset);
 
 // Protected profile route
 router.get("/profile", protect, (req, res) => {

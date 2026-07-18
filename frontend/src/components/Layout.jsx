@@ -1,264 +1,72 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import API from "../services/api";
 import { getTicketUpdates, getUnreadTicketUpdates } from "../utils/ticketUpdates";
-import { hasRole, IT_INVENTORY_ROLES } from "../utils/roles";
+import { hasRole, IT_INVENTORY_ROLES, NETWORK_MONITORING_VIEW_ROLES } from "../utils/roles";
 import { useTranslation } from "../i18n/LanguageContext";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
+import { Button, IconButton } from "../design-system";
+import Breadcrumbs from "./Breadcrumbs";
+import "./shell.css";
 
-const icons = {
-  dashboard: (
-    <path d="M4 4h6v6H4V4Zm10 0h6v4h-6V4ZM4 14h6v6H4v-6Zm10-2h6v8h-6v-8Z" />
-  ),
-  account: (
-    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0H5Z" />
-  ),
-  about: (
-    <path d="M11 10h2v7h-2v-7Zm0-4h2v2h-2V6Zm1-4a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z" />
-  ),
-  assets: (
-    <path d="M4 5h16v10H4V5Zm6 12h4v2h4v2H6v-2h4v-2Z" />
-  ),
-  tickets: (
-    <path d="M5 5h14v4a2 2 0 0 0 0 4v4H5v-4a2 2 0 0 0 0-4V5Zm5 3h6v2h-6V8Zm0 4h5v2h-5v-2Z" />
-  ),
-  inventory: (
-    <path d="M4 7 12 3l8 4-8 4-8-4Zm0 3 8 4 8-4v7l-8 4-8-4v-7Z" />
-  ),
-  repairs: (
-    <path d="m14.7 6.3 3-3 3 3-3 3-3-3ZM3 17.6l7.8-7.8 3.4 3.4L6.4 21H3v-3.4Z" />
-  ),
-  issues: (
-    <path d="M7 3h10v3H7V3Zm-2 5h14v13H5V8Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z" />
-  ),
-  users: (
-    <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21a7 7 0 0 1 14 0H2Zm14.5-1a8.8 8.8 0 0 0-2.1-4.9A5.5 5.5 0 0 1 22 20h-5.5Z" />
-  ),
-  menu: (
-    <path d="M4 7h16v2H4V7Zm0 4h16v2H4v-2Zm0 4h16v2H4v-2Z" />
-  ),
-  close: (
-    <path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5Zm11.2 0L19 6.4 6.4 19 5 17.6 17.6 5Z" />
-  ),
-  bell: (
-    <path d="M12 22a2.7 2.7 0 0 0 2.7-2.5H9.3A2.7 2.7 0 0 0 12 22Zm-7-5h14l-1.4-2.3V10a5.6 5.6 0 0 0-4.1-5.4V3a1.5 1.5 0 0 0-3 0v1.6A5.6 5.6 0 0 0 6.4 10v4.7L5 17Z" />
-  ),
-  logout: (
-    <path d="M4 4h8v2H6v12h6v2H4V4Zm11.6 4.4L20.2 13l-4.6 4.6-1.4-1.4 2.2-2.2H9v-2h7.4l-2.2-2.2 1.4-1.4Z" />
-  ),
+const iconPaths = {
+  dashboard:"M4 4h6v6H4V4Zm10 0h6v4h-6V4ZM4 14h6v6H4v-6Zm10-2h6v8h-6v-8Z", requests:"M5 5h14v4a2 2 0 0 0 0 4v4H5v-4a2 2 0 0 0 0-4V5Zm4 3h7v2H9V8Zm0 4h6v2H9v-2Z", repairs:"m14.7 6.3 3-3 3 3-3 3-3-3ZM3 17.6l7.8-7.8 3.4 3.4L6.4 21H3v-3.4Z", assets:"M4 5h16v10H4V5Zm6 12h4v2h4v2H6v-2h4v-2Z", custody:"M7 3h10v3H7V3Zm-2 5h14v13H5V8Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z", inventory:"M4 7 12 3l8 4-8 4-8-4Zm0 3 8 4 8-4v7l-8 4-8-4v-7Z", network:"M4 5h16v10H4V5Zm2 2v6h12V7H6Zm5 10h2v2h3v2H8v-2h3v-2Z", users:"M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21a7 7 0 0 1 14 0H2Z", report:"M5 3h14v18H5V3Zm3 4v2h8V7H8Zm0 4v2h8v-2H8Zm0 4v2h5v-2H8Z", settings:"M10.8 2h2.4l.5 2.1 1.8.8 1.9-1.1 1.7 1.7L18 7.4l.8 1.8 2.2.6v2.4l-2.2.6-.8 1.8 1.1 1.9-1.7 1.7-1.9-1.1-1.8.8-.5 2.1h-2.4l-.5-2.1-1.8-.8-1.9 1.1-1.7-1.7L6 14.6l-.8-1.8-2.2-.6V9.8l2.2-.6L6 7.4 4.9 5.5l1.7-1.7 1.9 1.1 1.8-.8.5-2.1ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z", about:"M11 10h2v7h-2v-7Zm0-4h2v2h-2V6Zm1-4a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z", account:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0H5Z", bell:"M12 22a2.7 2.7 0 0 0 2.7-2.5H9.3A2.7 2.7 0 0 0 12 22Zm-7-5h14l-1.4-2.3V10a5.6 5.6 0 0 0-4.1-5.4V3h-3v1.6A5.6 5.6 0 0 0 6.4 10v4.7L5 17Z", menu:"M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z", collapse:"m14.6 6-6 6 6 6 1.4-1.4-4.6-4.6L16 7.4 14.6 6Z", logout:"M4 4h8v2H6v12h6v2H4V4Zm11.6 4.4L20.2 13l-4.6 4.6-1.4-1.4 2.2-2.2H9v-2h7.4l-2.2-2.2 1.4-1.4Z",
 };
-
-function Icon({ name, className = "" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      {icons[name]}
-    </svg>
-  );
-}
+function Icon({ name }) { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={iconPaths[name]} /></svg>; }
 
 function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { enumLabel, t } = useTranslation();
-  const user = JSON.parse(localStorage.getItem("user"));
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { enumLabel, formatDateTime, t } = useTranslation();
+  const user = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("sidebarCollapsed") === "true");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [latestUpdate, setLatestUpdate] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const profileRef = useRef(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  const adminRoles = ["admin", "system_admin", "head_of_it"];
+  const navGroups = [
+    { title:"Overview", items:[{ path:"/dashboard", label:t("layout.nav.dashboard"), icon:"dashboard" }] },
+    { title:"Service Management", items:[{ path:"/tickets", label:t("layout.nav.tickets"), icon:"requests" },{ path:"/repairs", label:t("layout.nav.repairs"), icon:"repairs" }] },
+    { title:"Asset Management", items:[{ path:"/assets", label:t("layout.nav.assets"), icon:"assets" },...(hasRole(user,adminRoles)?[{ path:"/asset-issues", label:t("assetIssues.records"), icon:"custody" }]:[]),...(hasRole(user,IT_INVENTORY_ROLES)?[{ path:"/inventory", label:t("layout.nav.inventory"), icon:"inventory" }]:[])] },
+    { title:"Infrastructure", items:hasRole(user,NETWORK_MONITORING_VIEW_ROLES)?[{ path:"/network", label:t("common.networkMonitoring"), icon:"network" }]:[] },
+    { title:"Administration", items:hasRole(user,adminRoles)?[{ path:"/users", label:t("layout.nav.users"), icon:"users" },{ label:"Reports", icon:"report", planned:true },{ label:"Settings", icon:"settings", planned:true }]:[] },
+    { title:"Information", items:[{ path:"/about", label:t("layout.nav.about"), icon:"about" }] },
+    { title:"Account", items:[{ path:"/account", label:t("layout.nav.account"), icon:"account", badge:notificationCount },{ label:t("layout.logout"), icon:"logout", action:"logout" }] },
+  ].filter((group) => group.items.length);
+
+  const handleLogout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); navigate("/login"); };
+  const toggleCollapsed = () => setCollapsed((value) => { localStorage.setItem("sidebarCollapsed", String(!value)); return !value; });
 
   useEffect(() => {
+    const closeProfile = (event) => { if (!profileRef.current?.contains(event.target)) setProfileOpen(false); };
+    document.addEventListener("mousedown", closeProfile); return () => document.removeEventListener("mousedown", closeProfile);
+  }, []);
+  useEffect(() => {
     const fetchNotifications = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        setNotificationCount(0);
-        setLatestUpdate(null);
-        return;
-      }
-
-      try {
-        const response = await API.get("/tickets/mine", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const tickets = response.data.tickets || [];
-        const unreadUpdates = getUnreadTicketUpdates(tickets);
-
-        setNotificationCount(unreadUpdates.length);
-        setLatestUpdate(getTicketUpdates(tickets)[0] || null);
-      } catch {
-        setNotificationCount(0);
-        setLatestUpdate(null);
-      }
+      const token = localStorage.getItem("token"); if (!token) return;
+      try { const response = await API.get("/tickets/mine",{headers:{Authorization:`Bearer ${token}`}}); const tickets=response.data.tickets||[]; const updates=getTicketUpdates(tickets); setNotificationCount(getUnreadTicketUpdates(tickets).length); setLatestUpdate(updates[0]||null); setLastUpdated(new Date()); } catch { setNotificationCount(0); }
     };
+    fetchNotifications(); const intervalId=window.setInterval(fetchNotifications,30000); window.addEventListener("ticket-notifications-updated",fetchNotifications);
+    return()=>{window.clearInterval(intervalId);window.removeEventListener("ticket-notifications-updated",fetchNotifications);};
+  }, []);
 
-    fetchNotifications();
-
-    const intervalId = window.setInterval(fetchNotifications, 30000);
-    window.addEventListener("ticket-notifications-updated", fetchNotifications);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("ticket-notifications-updated", fetchNotifications);
-    };
-  }, [user?.id]);
-
-  const isActive = (path) => location.pathname === path;
-
-  const navItems = [
-    { path: "/dashboard", label: t("layout.nav.dashboard"), icon: "dashboard" },
-    { path: "/account", label: t("layout.nav.account"), icon: "account", badge: notificationCount },
-    { path: "/assets", label: t("layout.nav.assets"), icon: "assets" },
-    ...(hasRole(user, ["admin", "system_admin", "head_of_it"])
-      ? [{ path: "/asset-issues", label: "Item Issues", icon: "issues" }]
-      : []),
-    { path: "/tickets", label: t("layout.nav.tickets"), icon: "tickets" },
-    ...(hasRole(user, IT_INVENTORY_ROLES)
-      ? [{ path: "/inventory", label: t("layout.nav.inventory"), icon: "inventory" }]
-      : []),
-    { path: "/repairs", label: t("layout.nav.repairs"), icon: "repairs" },
-  ];
-
-  if (user?.role === "admin" || user?.role === "system_admin" || user?.role === "head_of_it") {
-    navItems.push({ path: "/users", label: t("layout.nav.users"), icon: "users" });
-  }
-
-  navItems.push({ path: "/about", label: t("layout.nav.about"), icon: "about" });
-
-  return (
-    <div className="app-shell">
-      {sidebarOpen && (
-        <button
-          type="button"
-          aria-label={t("layout.closeNavigation")}
-          className="sidebar-scrim"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <aside className={`app-sidebar ${sidebarOpen ? "app-sidebar-open" : ""}`}>
-        <div className="sidebar-brand">
-          <div className="brand-mark">GS</div>
-          <div className="min-w-0">
-            <h1>{t("common.appName")}</h1>
-            <p>{t("common.hardwareOperations")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(false)}
-            className="icon-button ml-auto lg:hidden"
-            aria-label={t("layout.closeNavigation")}
-          >
-            <Icon name="close" className="h-5 w-5" />
-          </button>
-        </div>
-
-        <nav className="sidebar-nav">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setSidebarOpen(false)}
-              className={`nav-link ${isActive(item.path) ? "nav-link-active" : ""}`}
-            >
-              <span className="nav-icon">
-                <Icon name={item.icon} className="h-4 w-4" />
-              </span>
-              <span>{item.label}</span>
-              {item.badge > 0 && (
-                <span className="nav-badge">
-                  {item.badge > 99 ? "99+" : item.badge}
-                </span>
-              )}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="sidebar-status-card">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-100/70">{t("layout.liveQueue")}</p>
-          <div className="mt-4 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-3xl font-black leading-none text-white">{notificationCount}</p>
-              <p className="mt-1 text-xs font-semibold text-blue-100/70">{t("layout.unreadUpdates")}</p>
-            </div>
-            <div className="progress-ring">
-              <span>{notificationCount > 0 ? "!" : t("common.ok")}</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <div className="app-workspace">
-        <header className="app-topbar">
-          <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen((open) => !open)}
-              className="icon-button lg:hidden"
-              aria-label={t("layout.toggleNavigation")}
-            >
-              <Icon name="menu" className="h-5 w-5" />
-            </button>
-
-            <div className="topbar-title">
-              <p>{t("common.governmentPortal")}</p>
-              <h2>{t("common.workspace")}</h2>
-            </div>
-          </div>
-
-          <div className="topbar-actions">
-            <LanguageSwitcher />
-            <Link
-              to="/account"
-              title={latestUpdate ? `${latestUpdate.ticketId}: ${latestUpdate.comment || t("layout.requestUpdated")}` : t("layout.nav.account")}
-              className={`icon-button relative ${isActive("/account") ? "is-active" : ""}`}
-              aria-label={t("layout.requestNotifications")}
-            >
-              <Icon name="bell" className="h-5 w-5" />
-              {notificationCount > 0 && (
-                <span className="notification-dot">
-                  {notificationCount > 9 ? "9+" : notificationCount}
-                </span>
-              )}
-            </Link>
-
-            <div className="user-pill">
-              <span className="avatar-dot">{getInitials(user?.name)}</span>
-              <span className="hidden min-w-0 sm:block">
-                <span className="block truncate text-sm font-black text-slate-900">{user?.name || t("common.user")}</span>
-                <span className="block truncate text-xs font-semibold capitalize text-slate-500">
-                  {enumLabel("roles", user?.role || "team")}
-                </span>
-              </span>
-            </div>
-
-            <button type="button" onClick={handleLogout} className="icon-button" aria-label={t("layout.logout")}>
-              <Icon name="logout" className="h-5 w-5" />
-            </button>
-          </div>
-        </header>
-
-        <main className="min-w-0 flex-1">
-          <div className="content-wrap">{children}</div>
-        </main>
-      </div>
+  return <div className={`enterprise-shell ${collapsed?"sidebar-collapsed":""}`}>
+    {mobileOpen && <button type="button" className="enterprise-scrim" aria-label="Close navigation" onClick={()=>setMobileOpen(false)} />}
+    <aside id="primary-navigation" className={`enterprise-sidebar ${collapsed?"is-collapsed":""} ${mobileOpen?"is-mobile-open":""}`} aria-label="Primary navigation">
+      <div className="enterprise-brand"><div className="enterprise-brand-mark">GSMB</div><div className="enterprise-brand-copy"><strong>GSMB</strong><span>IT Service Portal</span></div></div>
+      <button type="button" className="enterprise-sidebar-toggle" onClick={toggleCollapsed} aria-label={collapsed?"Expand sidebar":"Collapse sidebar"} aria-expanded={!collapsed}><Icon name="collapse" /></button>
+    <div className="enterprise-sidebar-scroll"><nav>{navGroups.map((group)=><section className="enterprise-nav-group" key={group.title}><h2 className="enterprise-nav-group-title">{group.title.toUpperCase()}</h2>{group.items.map((item)=>item.planned?<button type="button" disabled className="enterprise-nav-disabled" key={item.label}><span className="enterprise-nav-icon"><Icon name={item.icon}/></span><span className="enterprise-nav-label">{item.label}</span><span className="enterprise-nav-planned">Planned</span></button>:item.action==="logout"?<button type="button" className="enterprise-nav-link" onClick={handleLogout} key={item.label}><span className="enterprise-nav-icon"><Icon name={item.icon}/></span><span className="enterprise-nav-label">{item.label}</span></button>:<NavLink to={item.path} key={item.path} onClick={()=>setMobileOpen(false)} className={({isActive})=>`enterprise-nav-link ${isActive?"is-active":""}`} title={collapsed?item.label:undefined}><span className="enterprise-nav-icon"><Icon name={item.icon}/></span><span className="enterprise-nav-label">{item.label}</span>{item.badge>0&&<span className="nav-badge">{item.badge>99?"99+":item.badge}</span>}</NavLink>)}</section>)}</nav></div>
+    </aside>
+    <div className="enterprise-main">
+      <header className="enterprise-header"><div className="enterprise-header-left"><IconButton className="enterprise-mobile-toggle" label="Open navigation" onClick={()=>setMobileOpen(true)}><Icon name="menu"/></IconButton><Breadcrumbs pathname={location.pathname}/></div><div className="enterprise-header-actions">{lastUpdated&&<span className="enterprise-updated">Last updated {formatDateTime(lastUpdated,{hour:"2-digit",minute:"2-digit"})}</span>}<LanguageSwitcher/><Link to="/account" className="enterprise-notification gov-icon-button" aria-label={`${notificationCount} unread notifications`} title={latestUpdate?.comment||"Notifications"}><Icon name="bell"/>{notificationCount>0&&<span className="enterprise-notification-dot">{notificationCount>9?"9+":notificationCount}</span>}</Link><div className="enterprise-profile" ref={profileRef}><button type="button" className="enterprise-profile-trigger" onClick={()=>setProfileOpen((value)=>!value)} aria-haspopup="menu" aria-expanded={profileOpen}><span className="enterprise-avatar">{getInitials(user?.name)}</span><span className="enterprise-profile-copy"><strong>{user?.name||t("common.user")}</strong><span>{enumLabel("roles",user?.role||"team")}</span></span><span aria-hidden="true">⌄</span></button>{profileOpen&&<div className="enterprise-profile-menu" role="menu"><Link to="/account" role="menuitem" onClick={()=>setProfileOpen(false)}>My Account</Link><Button variant="ghost" role="menuitem" onClick={handleLogout}>Sign Out</Button></div>}</div></div></header>
+      <main className="enterprise-content" id="main-content">{children}</main>
     </div>
-  );
+  </div>;
 }
 
-function getInitials(name = "User") {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
+function getInitials(name="User"){return name.split(" ").map((part)=>part[0]).join("").slice(0,2).toUpperCase();}
 export default Layout;

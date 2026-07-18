@@ -1,5 +1,46 @@
 const mongoose = require("mongoose");
 
+const actorSnapshotSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: "" },
+    email: { type: String, default: "" },
+    employeeId: { type: String, default: "" },
+    role: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
+const userSnapshotSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: "" },
+    employeeId: { type: String, default: "" },
+    department: { type: String, default: "" },
+    ministry: { type: String, default: "" },
+    designation: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
+const lifecycleEventSchema = new mongoose.Schema(
+  {
+    action: {
+      type: String,
+      enum: ["created", "updated", "issued", "returned", "transferred", "destroyed", "deleted"],
+      required: true,
+    },
+    actor: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    actorSnapshot: { type: actorSnapshotSchema, default: () => ({}) },
+    fromUser: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    fromUserSnapshot: { type: userSnapshotSchema, default: () => ({}) },
+    toUser: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    toUserSnapshot: { type: userSnapshotSchema, default: () => ({}) },
+    issue: { type: mongoose.Schema.Types.ObjectId, ref: "AssetIssue", default: null },
+    notes: { type: String, trim: true, default: "" },
+    at: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const assetSchema = new mongoose.Schema(
   {
     itemNumber: {
@@ -37,20 +78,25 @@ const assetSchema = new mongoose.Schema(
       trim: true,
     },
 
-    productYear: { type: Number, min: 1900, max: 2100 },
+    productYear: { type: Number, min: 2010, max: 2100 },
+
+    customDeviceType: { type: String, trim: true, default: "" },
+    assetValue: { type: Number, min: 0, default: null },
+    supplier: { type: String, trim: true, default: "" },
+    invoiceImage: { type: String, default: "" },
 
     generation: { type: String, trim: true, default: "" },
 
     location: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
     },
 
     department: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
     },
 
     ministry: { type: String, trim: true, default: "" },
@@ -59,16 +105,36 @@ const assetSchema = new mongoose.Schema(
 
     userName: { type: String, trim: true, default: "" },
 
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
+
+    assignedUserSnapshot: { type: userSnapshotSchema, default: () => ({}) },
+
     issueDate: { type: Date },
 
     warrantyDate: {
       type: Date,
     },
+    hasWarranty: { type: Boolean, default: true },
+    warrantyStartDate: { type: Date, default: null },
+    warrantyEndDate: { type: Date, default: null },
 
     status: {
       type: String,
-      enum: ["active", "under_repair", "damaged", "retired"],
+      enum: ["active", "issued", "under_repair", "damaged", "retired", "destroyed"],
       default: "active",
+    },
+
+    destroyedAt: { type: Date, default: null },
+
+    destroyedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+
+    lifecycleEvents: {
+      type: [lifecycleEventSchema],
+      default: [],
     },
 
     notes: {
@@ -80,5 +146,15 @@ const assetSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+assetSchema.pre("validate", function normalizeLegacyAssetIdentifiers() {
+  if (!this.itemNumber && this.assetId) {
+    this.itemNumber = this.assetId;
+  }
+
+  if (!this.assetId && this.itemNumber) {
+    this.assetId = this.itemNumber;
+  }
+});
 
 module.exports = mongoose.model("Asset", assetSchema);

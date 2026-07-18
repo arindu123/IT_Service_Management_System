@@ -30,7 +30,7 @@ function Inventory() {
     };
 
     fetchInventory();
-  }, []);
+  }, [t]);
 
   return (
     <Layout>

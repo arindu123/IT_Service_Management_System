@@ -8,6 +8,8 @@ import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
 import Users from "./pages/Users";
+import Unauthorized from "./pages/Unauthorized";
+import NotFound from "./pages/NotFound";
 
 import Assets from "./pages/Assets";
 import AddAsset from "./pages/AddAsset";
@@ -20,11 +22,13 @@ import TicketDetail from "./pages/TicketDetail";
 import Inventory from "./pages/Inventory";
 import AddInventory from "./pages/AddInventory";
 
+import NetworkMonitoring from "./pages/NetworkMonitoring";
+
 import Repairs from "./pages/Repairs";
 import CreateRepair from "./pages/CreateRepair";
 
 import ProtectedRoute from "./components/ProtectedRoute";
-import { IT_INVENTORY_ROLES } from "./utils/roles";
+import { IT_INVENTORY_ROLES, NETWORK_MONITORING_VIEW_ROLES } from "./utils/roles";
 
 function Home() {
   return <Navigate to="/login" />;
@@ -38,6 +42,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
 
       <Route
         path="/about"
@@ -151,6 +156,15 @@ function App() {
       />
 
       <Route
+        path="/network"
+        element={
+          <ProtectedRoute roles={NETWORK_MONITORING_VIEW_ROLES}>
+            <NetworkMonitoring />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/repairs"
         element={
           <ProtectedRoute>
@@ -176,6 +190,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
