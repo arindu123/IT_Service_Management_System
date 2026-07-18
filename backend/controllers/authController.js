@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const PasswordResetRequest = require("../models/PasswordResetRequest");
 const { sendPasswordResetEmail } = require("../services/emailService");
+const securityLog = require("../utils/securityLogger");
 
 const RESET_TOKEN_WINDOW_MS = 24 * 60 * 60 * 1000;
 const EMAIL_RESET_COOLDOWN_MS = 60 * 1000;
@@ -13,7 +14,7 @@ const getEmailResetTtlMinutes = () => Math.max(1, Number(process.env.RESET_TOKEN
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
+    expiresIn: process.env.JWT_EXPIRES_IN || "8h",
   });
 };
 
@@ -33,24 +34,8 @@ const maskEmail = (email = "") => {
 
 const getFrontendUrl = () => (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
 
-const createPasswordResetToken = (request) => {
-  const expiresAt = request.resetTokenExpiresAt || new Date(Date.now() + RESET_TOKEN_WINDOW_MS);
-  const expiresIn = Math.max(60, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
-  const userId = request.user?._id?.toString?.() || request.user?.toString?.();
-
-  return jwt.sign(
-    {
-      type: "password_reset",
-      requestId: request._id.toString(),
-      userId,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn }
-  );
-};
-
-const buildPasswordResetLink = (request) =>
-  `${getFrontendUrl()}/reset-password/${encodeURIComponent(createPasswordResetToken(request))}`;
+const createRawResetToken = () => crypto.randomBytes(32).toString("hex");
+const buildPasswordResetLink = (rawToken) => `${getFrontendUrl()}/reset-password/${encodeURIComponent(rawToken)}`;
 
 const serializeUser = (user) => ({
   id: user._id,
@@ -74,7 +59,7 @@ const serializeResetUser = (user) => ({
   designation: user.designation,
 });
 
-const serializeResetRequest = (request, { includeResetLink = false } = {}) => {
+const serializeResetRequest = (request) => {
   if (!request) return null;
 
   const resetRequest = {
@@ -98,15 +83,6 @@ const serializeResetRequest = (request, { includeResetLink = false } = {}) => {
       name: request.approvedBy.name,
       employeeId: request.approvedBy.employeeId,
     };
-  }
-
-  if (
-    includeResetLink &&
-    request.status === "approved" &&
-    request.resetTokenExpiresAt &&
-    request.resetTokenExpiresAt > new Date()
-  ) {
-    resetRequest.resetLink = buildPasswordResetLink(request);
   }
 
   return resetRequest;
@@ -134,6 +110,8 @@ const getActivePasswordResetRequest = async (userId) => {
     request.resetTokenExpiresAt <= new Date()
   ) {
     request.status = "expired";
+    request.resetTokenHash = null;
+    request.resetTokenExpiresAt = null;
     await request.save();
     return null;
   }
@@ -142,26 +120,16 @@ const getActivePasswordResetRequest = async (userId) => {
 };
 
 const validatePasswordResetToken = async (token) => {
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-  if (decoded.type !== "password_reset") {
-    throw new Error("Invalid reset link");
-  }
-
-  const request = await PasswordResetRequest.findById(decoded.requestId).populate(
+  const request = await PasswordResetRequest.findOne({
+    resetTokenHash: hashResetToken(token),
+    status: "approved",
+    resetTokenExpiresAt: { $gt: new Date() },
+  }).select("+resetTokenHash").populate(
     "user",
     "name email employeeId department designation password"
   );
 
-  if (
-    !request ||
-    request.status !== "approved" ||
-    request.user?._id?.toString() !== decoded.userId ||
-    !request.resetTokenExpiresAt ||
-    request.resetTokenExpiresAt <= new Date()
-  ) {
-    throw new Error("Reset link is invalid or expired");
-  }
+  if (!request) throw new Error("Reset link is invalid or expired");
 
   return request;
 };
@@ -218,10 +186,10 @@ const registerUser = async (req, res) => {
       user: serializeUser(user),
       token: generateToken(user._id),
     });
+    securityLog("user_registered", { userId: user._id.toString(), role: user.role });
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -240,6 +208,7 @@ const loginUser = async (req, res) => {
     const user = await findUserByEmployeeId(normalizedEmployeeId);
 
     if (!user) {
+      securityLog("login_failed", { reason: "invalid_credentials" });
       return res.status(401).json({
         message: "Invalid employee ID or password",
       });
@@ -248,11 +217,13 @@ const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      securityLog("login_failed", { reason: "invalid_credentials" });
       return res.status(401).json({
         message: "Invalid employee ID or password",
       });
     }
 
+    securityLog("login_succeeded", { userId: user._id.toString(), role: user.role });
     res.status(200).json({
       message: "Login successful",
       user: serializeUser(user),
@@ -261,7 +232,6 @@ const loginUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -280,8 +250,9 @@ const checkPasswordResetStatus = async (req, res) => {
 
     if (!user) {
       return res.status(200).json({
-        registered: false,
-        message: "Employee ID is not registered.",
+        registered: true,
+        emailResetConfigured: isEmailResetConfigured(),
+        message: EMAIL_RESET_NEUTRAL_MESSAGE,
       });
     }
 
@@ -291,12 +262,11 @@ const checkPasswordResetStatus = async (req, res) => {
       registered: true,
       user: serializeResetUser(user),
       emailResetConfigured: isEmailResetConfigured(),
-      request: serializeResetRequest(activeRequest, { includeResetLink: true }),
+      request: serializeResetRequest(activeRequest),
     });
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -321,10 +291,7 @@ const requestPasswordReset = async (req, res) => {
     const user = await findUserByEmployeeId(normalizedEmployeeId).select("-password");
 
     if (!user) {
-      return res.status(404).json({
-        registered: false,
-        message: "Employee ID is not registered.",
-      });
+      return res.status(200).json({ message: EMAIL_RESET_NEUTRAL_MESSAGE });
     }
 
     const activeRequest = await getActivePasswordResetRequest(user._id);
@@ -334,10 +301,10 @@ const requestPasswordReset = async (req, res) => {
         registered: true,
         user: serializeResetUser(user),
         emailResetConfigured: isEmailResetConfigured(),
-        request: serializeResetRequest(activeRequest, { includeResetLink: true }),
+        request: serializeResetRequest(activeRequest),
         message:
           activeRequest.status === "approved"
-            ? "Your reset link is ready."
+            ? EMAIL_RESET_NEUTRAL_MESSAGE
             : "Your password reset request is already pending with IT admin.",
       });
     }
@@ -351,6 +318,7 @@ const requestPasswordReset = async (req, res) => {
       });
     }
 
+    const rawToken = method === "email" ? createRawResetToken() : null;
     const request = await PasswordResetRequest.create({
       user: user._id,
       employeeId: user.employeeId,
@@ -359,24 +327,36 @@ const requestPasswordReset = async (req, res) => {
       requestedAt: new Date(),
       approvedAt: method === "email" ? new Date() : null,
       resetTokenExpiresAt: method === "email" ? new Date(Date.now() + RESET_TOKEN_WINDOW_MS) : null,
+      resetTokenHash: rawToken ? hashResetToken(rawToken) : null,
     });
 
     await request.populate("user", "name email employeeId department designation");
+
+    if (rawToken && request.user?.email) {
+      try {
+        await sendPasswordResetEmail({ to: request.user.email, resetUrl: buildPasswordResetLink(rawToken), ttlMinutes: 1440 });
+      } catch {
+        request.status = "expired";
+        request.resetTokenHash = null;
+        request.resetTokenExpiresAt = null;
+        await request.save();
+        return res.status(503).json({ message: "Password reset delivery failed. Please try again later." });
+      }
+    }
 
     res.status(201).json({
       registered: true,
       user: serializeResetUser(user),
       emailResetConfigured: isEmailResetConfigured(),
-      request: serializeResetRequest(request, { includeResetLink: method === "email" }),
+      request: serializeResetRequest(request),
       message:
         method === "email"
-          ? "A reset link has been generated for your email reset request."
-          : "Your request has been sent to IT admin. Check this page later for the reset link.",
+          ? EMAIL_RESET_NEUTRAL_MESSAGE
+          : "Your request has been sent to IT admin. You will receive secure reset instructions if approved.",
     });
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -396,13 +376,15 @@ const getPasswordResetRequests = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
 
 const approvePasswordResetRequest = async (req, res) => {
   try {
+    if (!isEmailResetConfigured()) {
+      return res.status(503).json({ message: "Secure password reset delivery is not configured." });
+    }
     const request = await PasswordResetRequest.findById(req.params.id).populate(
       "user",
       "name email employeeId department designation"
@@ -424,8 +406,23 @@ const approvePasswordResetRequest = async (req, res) => {
     request.approvedAt = new Date();
     request.approvedBy = req.user._id;
     request.resetTokenExpiresAt = new Date(Date.now() + RESET_TOKEN_WINDOW_MS);
+    const rawToken = createRawResetToken();
+    request.resetTokenHash = hashResetToken(rawToken);
     await request.save();
     await request.populate("approvedBy", "name employeeId");
+
+    if (request.user?.email && isEmailResetConfigured()) {
+      try {
+        await sendPasswordResetEmail({ to: request.user.email, resetUrl: buildPasswordResetLink(rawToken), ttlMinutes: 1440 });
+      } catch {
+        request.status = "expired";
+        request.resetTokenHash = null;
+        request.resetTokenExpiresAt = null;
+        await request.save();
+        return res.status(503).json({ message: "Password reset delivery failed. Please try again later." });
+      }
+    }
+    securityLog("password_reset_approved", { requestId: request._id.toString(), approvedBy: req.user._id.toString() });
 
     res.status(200).json({
       message: "Password reset request approved.",
@@ -434,7 +431,6 @@ const approvePasswordResetRequest = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -459,6 +455,8 @@ const cancelPasswordResetRequest = async (req, res) => {
     }
 
     request.status = "cancelled";
+    request.resetTokenHash = null;
+    request.resetTokenExpiresAt = null;
     await request.save();
 
     res.status(200).json({
@@ -468,7 +466,6 @@ const cancelPasswordResetRequest = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -549,6 +546,7 @@ const completeEmailPasswordReset = async (req, res) => {
     user.resetPasswordExpiresAt = undefined;
     user.resetPasswordRequestedAt = undefined;
     await user.save();
+    securityLog("password_reset_completed", { userId: user._id.toString(), method: "email" });
     return res.status(200).json({ message: "Password reset successful. You can sign in with your new password now." });
   } catch {
     return res.status(400).json({ message: "Reset link is invalid or expired" });
@@ -579,15 +577,18 @@ const completePasswordReset = async (req, res) => {
 
     request.status = "completed";
     request.completedAt = new Date();
+    request.resetTokenHash = null;
+    request.resetTokenExpiresAt = null;
     await request.save();
+    securityLog("password_reset_completed", { requestId: request._id.toString(), userId: request.user._id.toString() });
 
     res.status(200).json({
       message: "Password reset successful. You can sign in with your new password now.",
     });
-  } catch (error) {
-    res.status(400).json({
-      message: error.message || "Reset link is invalid or expired",
-    });
+    } catch (error) {
+      res.status(400).json({
+      message: "Reset link is invalid or expired",
+      });
   }
 };
 
@@ -602,7 +603,6 @@ const getUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -643,6 +643,7 @@ const updateUserRole = async (req, res) => {
 
     user.role = role;
     await user.save();
+    securityLog("user_role_changed", { userId: user._id.toString(), changedBy: req.user._id.toString(), role });
 
     res.status(200).json({
       message: "User role updated successfully",
@@ -651,7 +652,6 @@ const updateUserRole = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };

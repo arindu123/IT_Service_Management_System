@@ -15,23 +15,23 @@ const {
   updateUserRole,
 } = require("../controllers/authController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
-const passwordResetRateLimit = require("../middleware/passwordResetRateLimit");
+const { loginRateLimit, registrationRateLimit, passwordResetRateLimit } = require("../middleware/securityRateLimit");
 
 const router = express.Router();
 
 // Register route
-router.post("/register", registerUser);
+router.post("/register", registrationRateLimit, registerUser);
 
 // Login route
-router.post("/login", loginUser);
+router.post("/login", loginRateLimit, loginUser);
 
 // Forgot password route
 router.post("/forgot-password", passwordResetRateLimit, requestEmailPasswordReset);
-router.post("/password-reset/check", checkPasswordResetStatus);
-router.post("/password-reset/request", requestPasswordReset);
-router.get("/password-reset/token/:token", getResetTokenStatus);
-router.post("/password-reset/complete", completePasswordReset);
-router.post("/reset-password/:token", completeEmailPasswordReset);
+router.post("/password-reset/check", passwordResetRateLimit, checkPasswordResetStatus);
+router.post("/password-reset/request", passwordResetRateLimit, requestPasswordReset);
+router.get("/password-reset/token/:token", passwordResetRateLimit, getResetTokenStatus);
+router.post("/password-reset/complete", passwordResetRateLimit, completePasswordReset);
+router.post("/reset-password/:token", passwordResetRateLimit, completeEmailPasswordReset);
 
 // Protected profile route
 router.get("/profile", protect, (req, res) => {

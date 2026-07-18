@@ -19,9 +19,14 @@ export function Input({ id, label, error, helpText, success, optional, className
   const fieldId = useFieldId(id);
   return <FieldShell {...{ id: fieldId, label, error, helpText, success, optional, className, required }}>{({ describedBy }) => <input id={fieldId} className={cx("gov-field-control", error && "gov-field-control--error", inputClassName)} required={required} aria-invalid={Boolean(error)} aria-describedby={describedBy} {...props} />}</FieldShell>;
 }
-export function Select({ id, label, error, helpText, success, optional, className, selectClassName, required, children, ...props }) {
+export function Select({ id, label, error, helpText, success, optional, className, selectClassName, required, children, options, ...props }) {
   const fieldId = useFieldId(id);
-  return <FieldShell {...{ id: fieldId, label, error, helpText, success, optional, className, required }}>{({ describedBy }) => <select id={fieldId} className={cx("gov-field-control", error && "gov-field-control--error", selectClassName)} required={required} aria-invalid={Boolean(error)} aria-describedby={describedBy} {...props}>{children}</select>}</FieldShell>;
+  const renderedOptions = options?.map((option, index) => {
+    const normalized = Array.isArray(option) ? { value: option[0], label: option[1] } : option;
+    if (!normalized) return null;
+    return <option key={normalized.value ?? index} value={normalized.value ?? ""} disabled={normalized.disabled}>{normalized.label ?? normalized.value ?? ""}</option>;
+  });
+  return <FieldShell {...{ id: fieldId, label, error, helpText, success, optional, className, required }}>{({ describedBy }) => <select id={fieldId} className={cx("gov-field-control", error && "gov-field-control--error", selectClassName)} required={required} aria-invalid={Boolean(error)} aria-describedby={describedBy} {...props}>{options ? renderedOptions : children}</select>}</FieldShell>;
 }
 export function Textarea({ id, label, error, helpText, success, optional, className, textareaClassName, required, ...props }) {
   const fieldId = useFieldId(id);

@@ -25,12 +25,7 @@ function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const user = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);
 
-  const requestSummary = useCallback(() => {
-    const token = localStorage.getItem("token");
-    return API.get("/dashboard/summary", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  }, []);
+  const requestSummary = useCallback(() => API.get("/dashboard/summary"), []);
 
   const refreshSummary = async () => {
     setRefreshing(true);

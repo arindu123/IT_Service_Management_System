@@ -1,4 +1,4 @@
-import API from "./api";
+import API from "./apiClient";
 
 const networkService = {
   summary: () => API.get("/network/summary"),

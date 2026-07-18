@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import API from "../services/api";
 import { getTicketUpdates, getUnreadTicketUpdates } from "../utils/ticketUpdates";
 import { hasRole, IT_INVENTORY_ROLES, NETWORK_MONITORING_VIEW_ROLES } from "../utils/roles";
@@ -8,6 +8,7 @@ import LanguageSwitcher from "../i18n/LanguageSwitcher";
 import { Button, IconButton } from "../design-system";
 import Breadcrumbs from "./Breadcrumbs";
 import "./shell.css";
+import { useAuth } from "../auth/AuthContext";
 
 const iconPaths = {
   dashboard:"M4 4h6v6H4V4Zm10 0h6v4h-6V4ZM4 14h6v6H4v-6Zm10-2h6v8h-6v-8Z", requests:"M5 5h14v4a2 2 0 0 0 0 4v4H5v-4a2 2 0 0 0 0-4V5Zm4 3h7v2H9V8Zm0 4h6v2H9v-2Z", repairs:"m14.7 6.3 3-3 3 3-3 3-3-3ZM3 17.6l7.8-7.8 3.4 3.4L6.4 21H3v-3.4Z", assets:"M4 5h16v10H4V5Zm6 12h4v2h4v2H6v-2h4v-2Z", custody:"M7 3h10v3H7V3Zm-2 5h14v13H5V8Zm3 3v2h8v-2H8Zm0 4v2h5v-2H8Z", inventory:"M4 7 12 3l8 4-8 4-8-4Zm0 3 8 4 8-4v7l-8 4-8-4v-7Z", network:"M4 5h16v10H4V5Zm2 2v6h12V7H6Zm5 10h2v2h3v2H8v-2h3v-2Z", users:"M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21a7 7 0 0 1 14 0H2Z", report:"M5 3h14v18H5V3Zm3 4v2h8V7H8Zm0 4v2h8v-2H8Zm0 4v2h5v-2H8Z", settings:"M10.8 2h2.4l.5 2.1 1.8.8 1.9-1.1 1.7 1.7L18 7.4l.8 1.8 2.2.6v2.4l-2.2.6-.8 1.8 1.1 1.9-1.7 1.7-1.9-1.1-1.8.8-.5 2.1h-2.4l-.5-2.1-1.8-.8-1.9 1.1-1.7-1.7L6 14.6l-.8-1.8-2.2-.6V9.8l2.2-.6L6 7.4 4.9 5.5l1.7-1.7 1.9 1.1 1.8-.8.5-2.1ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z", about:"M11 10h2v7h-2v-7Zm0-4h2v2h-2V6Zm1-4a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z", account:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0H5Z", bell:"M12 22a2.7 2.7 0 0 0 2.7-2.5H9.3A2.7 2.7 0 0 0 12 22Zm-7-5h14l-1.4-2.3V10a5.6 5.6 0 0 0-4.1-5.4V3h-3v1.6A5.6 5.6 0 0 0 6.4 10v4.7L5 17Z", menu:"M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z", collapse:"m14.6 6-6 6 6 6 1.4-1.4-4.6-4.6L16 7.4 14.6 6Z", logout:"M4 4h8v2H6v12h6v2H4V4Zm11.6 4.4L20.2 13l-4.6 4.6-1.4-1.4 2.2-2.2H9v-2h7.4l-2.2-2.2 1.4-1.4Z",
@@ -18,7 +19,7 @@ function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { enumLabel, formatDateTime, t } = useTranslation();
-  const user = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);
+  const { user, clearSession } = useAuth();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("sidebarCollapsed") === "true");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -38,7 +39,7 @@ function Layout({ children }) {
     { title:"Account", items:[{ path:"/account", label:t("layout.nav.account"), icon:"account", badge:notificationCount },{ label:t("layout.logout"), icon:"logout", action:"logout" }] },
   ].filter((group) => group.items.length);
 
-  const handleLogout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); navigate("/login"); };
+  const handleLogout = () => { clearSession(); navigate("/login"); };
   const toggleCollapsed = () => setCollapsed((value) => { localStorage.setItem("sidebarCollapsed", String(!value)); return !value; });
 
   useEffect(() => {
@@ -47,12 +48,12 @@ function Layout({ children }) {
   }, []);
   useEffect(() => {
     const fetchNotifications = async () => {
-      const token = localStorage.getItem("token"); if (!token) return;
-      try { const response = await API.get("/tickets/mine",{headers:{Authorization:`Bearer ${token}`}}); const tickets=response.data.tickets||[]; const updates=getTicketUpdates(tickets); setNotificationCount(getUnreadTicketUpdates(tickets).length); setLatestUpdate(updates[0]||null); setLastUpdated(new Date()); } catch { setNotificationCount(0); }
+      if (!user) return;
+      try { const response = await API.get("/tickets/mine"); const tickets=response.data.tickets||[]; const updates=getTicketUpdates(tickets); setNotificationCount(getUnreadTicketUpdates(tickets).length); setLatestUpdate(updates[0]||null); setLastUpdated(new Date()); } catch { setNotificationCount(0); }
     };
     fetchNotifications(); const intervalId=window.setInterval(fetchNotifications,30000); window.addEventListener("ticket-notifications-updated",fetchNotifications);
     return()=>{window.clearInterval(intervalId);window.removeEventListener("ticket-notifications-updated",fetchNotifications);};
-  }, []);
+  }, [user]);
 
   return <div className={`enterprise-shell ${collapsed?"sidebar-collapsed":""}`}>
     {mobileOpen && <button type="button" className="enterprise-scrim" aria-label="Close navigation" onClick={()=>setMobileOpen(false)} />}

@@ -7,13 +7,14 @@ import "./design-system/styles.css";
 import App from "./App.jsx";
 import { LanguageProvider } from "./i18n/LanguageContext.jsx";
 import { ToastProvider } from "./design-system";
+import { AuthProvider } from "./auth/AuthContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <LanguageProvider>
       <ToastProvider>
         <BrowserRouter>
-          <App />
+          <AuthProvider><App /></AuthProvider>
         </BrowserRouter>
       </ToastProvider>
     </LanguageProvider>

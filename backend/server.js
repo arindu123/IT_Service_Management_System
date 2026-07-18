@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const dotenv = require("dotenv");
 
 // Load .env file
@@ -19,7 +20,9 @@ const { startNetworkMonitorScheduler } = require("./services/networkMonitorSched
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+app.use(helmet());
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json({ limit: "10mb" }));
 
 // Routes
@@ -36,6 +39,13 @@ app.use("/api/network", networkRoutes);
 // Test route
 app.get("/", (req, res) => {
   res.send("IT Service Management System API is running...");
+});
+
+app.use((req, res) => res.status(404).json({ message: "Resource not found" }));
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+  console.error(error);
+  res.status(error.statusCode || 500).json({ message: "An unexpected server error occurred" });
 });
 
 // Port

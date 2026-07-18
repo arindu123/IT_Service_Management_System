@@ -12,9 +12,10 @@ import {
   priorityTone,
   statusTone,
 } from "../utils/ticketUpdates";
+import { useAuth } from "../auth/AuthContext";
 
 function MyAccount() {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const { user = {} } = useAuth();
 
   const [tickets, setTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState("");
@@ -27,12 +28,7 @@ function MyAccount() {
   useEffect(() => {
     const fetchMyTickets = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await API.get("/tickets/mine", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await API.get("/tickets/mine");
 
         const nextTickets = response.data.tickets || [];
         setTickets(nextTickets);
@@ -84,16 +80,7 @@ function MyAccount() {
     setMarkingRead(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await API.put(
-        "/tickets/mine/notifications/read",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await API.put("/tickets/mine/notifications/read", {});
 
       setTickets(response.data.tickets || []);
       window.dispatchEvent(new Event("ticket-notifications-updated"));

@@ -39,6 +39,11 @@ const passwordResetRequestSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    resetTokenHash: {
+      type: String,
+      select: false,
+      default: null,
+    },
     completedAt: {
       type: Date,
       default: null,
@@ -51,5 +56,6 @@ const passwordResetRequestSchema = new mongoose.Schema(
 
 passwordResetRequestSchema.index({ user: 1, status: 1 });
 passwordResetRequestSchema.index({ employeeId: 1, status: 1 });
+passwordResetRequestSchema.index({ resetTokenHash: 1 }, { sparse: true });
 
 module.exports = mongoose.model("PasswordResetRequest", passwordResetRequestSchema);

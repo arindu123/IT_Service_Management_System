@@ -4,13 +4,15 @@ import API from "../services/api";
 import { Alert, Button } from "../components/ui";
 import { useTranslation } from "../i18n/LanguageContext";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
+import { useAuth } from "../auth/AuthContext";
 
 function Login() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { establishSession } = useAuth();
 
-  const [employeeId, setEmployeeId] = useState("001");
-  const [password, setPassword] = useState("123456");
+  const [employeeId, setEmployeeId] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,8 +28,7 @@ function Login() {
         password,
       });
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      establishSession(response.data.token, response.data.user);
 
       navigate("/dashboard");
     } catch (err) {
