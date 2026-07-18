@@ -31,5 +31,5 @@ export function Modal({ open, onClose, title, children, footer, size = "md", clo
 }
 
 export function ConfirmationDialog({ open, onClose, onConfirm, title = "Confirm action", message, confirmLabel = "Confirm", cancelLabel = "Cancel", danger = false, loading = false }) {
-  return <Modal open={open} onClose={onClose} title={title} size="sm" closeOnBackdrop={!loading} footer={<><Button variant="secondary" disabled={loading} onClick={onClose}>{cancelLabel}</Button><Button variant={danger ? "danger" : "primary"} loading={loading} onClick={onConfirm}>{confirmLabel}</Button></>}>{message && <p>{message}</p>}</Modal>;
+  return <Modal open={open} onClose={onClose} title={title} size="sm" closeOnBackdrop={!loading} footer={<><Button variant="secondary" disabled={loading} onClick={onClose}>{cancelLabel}</Button><Button variant={danger ? "danger" : "primary"} loading={loading} onClick={onConfirm}>{confirmLabel}</Button></>}>{message && <div>{message}</div>}</Modal>;
 }

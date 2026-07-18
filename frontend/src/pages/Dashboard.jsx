@@ -25,26 +25,41 @@ function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const user = useMemo(() => JSON.parse(localStorage.getItem("user") || "null"), []);
 
-  const fetchSummary = useCallback(async ({ refresh = false } = {}) => {
-    if (refresh) setRefreshing(true);
-    setError("");
+  const requestSummary = useCallback(() => {
+    const token = localStorage.getItem("token");
+    return API.get("/dashboard/summary", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }, []);
+
+  const refreshSummary = async () => {
+    setRefreshing(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await API.get("/dashboard/summary", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await requestSummary();
       setSummary(response.data);
+      setError("");
       setLastUpdated(new Date());
     } catch (err) {
       setError(err.response?.data?.message || t("dashboard.loadError"));
     } finally {
       setRefreshing(false);
     }
-  }, [t]);
+  };
 
   useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
+    let active = true;
+    requestSummary()
+      .then((response) => {
+        if (!active) return;
+        setSummary(response.data);
+        setError("");
+        setLastUpdated(new Date());
+      })
+      .catch((err) => {
+        if (active) setError(err.response?.data?.message || t("dashboard.loadError"));
+      });
+    return () => { active = false; };
+  }, [requestSummary, t]);
 
   const model = useMemo(
     () => (summary ? buildDashboardModel(summary, t, enumLabel) : null),
@@ -57,14 +72,14 @@ function Dashboard() {
         <DashboardHeader
           lastUpdated={lastUpdated ? formatDateTime(lastUpdated) : null}
           refreshing={refreshing}
-          onRefresh={() => fetchSummary({ refresh: true })}
+          onRefresh={refreshSummary}
         />
 
         {error && !summary && (
           <ErrorState
             title="Dashboard unavailable"
             message={error}
-            action={<Button variant="secondary" onClick={() => fetchSummary()}>Try again</Button>}
+            action={<Button variant="secondary" onClick={refreshSummary}>Try again</Button>}
           />
         )}
 

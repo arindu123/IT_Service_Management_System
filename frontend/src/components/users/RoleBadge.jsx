@@ -1,0 +1,1 @@
+import { StatusBadge } from "../../design-system"; export default function RoleBadge({role}){return <StatusBadge tone={role==="admin"||role==="system_admin"?"danger":role==="technician"?"warning":"info"} label={String(role||"unknown").replace(/_/g," ")}/>;}

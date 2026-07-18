@@ -1,0 +1,1 @@
+import{AlertBanner}from"../../design-system";export default function ReportExport(){return <AlertBanner tone="info" title="Export availability">Export is not provided by the current backend API. No client-side or fake export has been enabled.</AlertBanner>}

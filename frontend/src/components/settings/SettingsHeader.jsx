@@ -1,0 +1,1 @@
+export default function SettingsHeader(){return <header className="settings-header"><p>SYSTEM CONFIGURATION</p><h1>Settings</h1><span>Review account preferences and security options supported by this portal.</span></header>}

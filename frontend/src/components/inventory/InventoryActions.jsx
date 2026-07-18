@@ -1,0 +1,1 @@
+import{Button}from"../../design-system";export default function InventoryActions({item,onEdit,onDelete}){return <div className="inventory-row-actions"><Button variant="ghost" onClick={()=>onEdit(item)}>Edit</Button><Button variant="danger" onClick={()=>onDelete(item)}>Delete</Button></div>;}

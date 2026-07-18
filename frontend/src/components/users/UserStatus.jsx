@@ -1,0 +1,1 @@
+import { StatusBadge } from "../../design-system"; export default function UserStatus({user}){const active=user.isActive!==false&&user.status!=="inactive";return <StatusBadge tone={active?"success":"neutral"} label={active?"Active":"Inactive"}/>;}

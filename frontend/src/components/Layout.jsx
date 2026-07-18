@@ -33,7 +33,7 @@ function Layout({ children }) {
     { title:"Service Management", items:[{ path:"/tickets", label:t("layout.nav.tickets"), icon:"requests" },{ path:"/repairs", label:t("layout.nav.repairs"), icon:"repairs" }] },
     { title:"Asset Management", items:[{ path:"/assets", label:t("layout.nav.assets"), icon:"assets" },...(hasRole(user,adminRoles)?[{ path:"/asset-issues", label:t("assetIssues.records"), icon:"custody" }]:[]),...(hasRole(user,IT_INVENTORY_ROLES)?[{ path:"/inventory", label:t("layout.nav.inventory"), icon:"inventory" }]:[])] },
     { title:"Infrastructure", items:hasRole(user,NETWORK_MONITORING_VIEW_ROLES)?[{ path:"/network", label:t("common.networkMonitoring"), icon:"network" }]:[] },
-    { title:"Administration", items:hasRole(user,adminRoles)?[{ path:"/users", label:t("layout.nav.users"), icon:"users" },{ label:"Reports", icon:"report", planned:true },{ label:"Settings", icon:"settings", planned:true }]:[] },
+    { title:"Administration", items:hasRole(user,adminRoles)?[{ path:"/users", label:t("layout.nav.users"), icon:"users" },{ path:"/reports", label:"Reports", icon:"report" },{ path:"/settings", label:"Settings", icon:"settings" }]:[] },
     { title:"Information", items:[{ path:"/about", label:t("layout.nav.about"), icon:"about" }] },
     { title:"Account", items:[{ path:"/account", label:t("layout.nav.account"), icon:"account", badge:notificationCount },{ label:t("layout.logout"), icon:"logout", action:"logout" }] },
   ].filter((group) => group.items.length);

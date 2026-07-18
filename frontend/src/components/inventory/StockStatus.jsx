@@ -1,0 +1,1 @@
+import{StatusBadge}from"../../design-system";const map={available:["Available","success"],low:["Low stock","warning"],critical:["Critical stock","danger"]};export default function StockStatus({status}){const[label,tone]=map[status]||[status,"neutral"];return <StatusBadge label={label} tone={tone}/>;}

@@ -1,0 +1,1 @@
+export default function UserHeader({ count }) { return <header className="users-header"><div><p className="users-kicker">ADMINISTRATION</p><h1>User Management</h1><p>Manage employee accounts, roles and access status.</p></div><span>{count} registered users</span></header>; }

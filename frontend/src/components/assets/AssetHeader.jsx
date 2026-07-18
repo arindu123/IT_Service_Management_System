@@ -1,0 +1,2 @@
+import{Button}from"../../design-system";
+export default function AssetHeader({onAdd,onCustody,canManageCustody}){return <header className="asset-page-header"><div><p className="asset-kicker">Asset management</p><h1>IT Asset Register</h1><p>Manage organizational hardware assets, ownership, lifecycle and maintenance information.</p></div><div>{canManageCustody&&<Button variant="secondary" onClick={onCustody}>Asset Custody</Button>}<Button onClick={onAdd}>Add Asset</Button></div></header>;}

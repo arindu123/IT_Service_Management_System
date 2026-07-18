@@ -1,0 +1,1 @@
+import{Card}from"../../design-system";export default function ReportCard({title,description,value}){return <Card className="report-card"><h2>{title}</h2><p>{description}</p>{value!==undefined&&<strong>{value}</strong>}</Card>}

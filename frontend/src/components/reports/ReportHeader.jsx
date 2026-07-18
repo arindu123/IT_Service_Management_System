@@ -1,0 +1,1 @@
+export default function ReportHeader(){return <header className="report-header"><div><p>ANALYTICS & GOVERNANCE</p><h1>IT Management Reports</h1><span>Review service, asset, repair and inventory performance using current system data.</span></div></header>}

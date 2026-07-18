@@ -1,0 +1,4 @@
+import { Card, CardBody, CardHeader, TableEmptyState } from "../../design-system";
+import RequestStatus from "./RequestStatus";
+
+export default function RequestTimeline({ history=[], enumLabel, formatDateTime }) { const items=[...history].reverse(); return <Card><CardHeader title="Workflow timeline" description="Recorded status transitions and comments."/><CardBody>{items.length?<ol className="request-timeline">{items.map((item,index)=><li key={item._id||index}><span aria-hidden="true"/><div><RequestStatus status={item.newStatus} enumLabel={enumLabel}/><p>{item.comment||item.changeSummary?.join(" · ")||"Status updated"}</p><small>{item.changedBy?.name||"System"} · {formatDateTime(item.changedAt)}</small></div></li>)}</ol>:<TableEmptyState title="No workflow updates"/>}</CardBody></Card>; }

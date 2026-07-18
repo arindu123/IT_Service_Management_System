@@ -1,0 +1,1 @@
+import{Button}from"../../design-system";export default function RepairHeader({onAdd}){return <header className="repair-page-header"><div><p className="repair-kicker">Maintenance management</p><h1>IT Repair Management</h1><p>Track hardware issues, maintenance activities and repair progress.</p></div><Button onClick={onAdd}>Create Repair Record</Button></header>;}

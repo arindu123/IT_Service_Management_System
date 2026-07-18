@@ -1,0 +1,1 @@
+import{Button,Card,CardBody,CardHeader}from"../../design-system";export default function RepairActions({onEdit,onDelete,deleting}){return <Card><CardHeader title="Actions"/><CardBody><div className="repair-action-list"><Button onClick={onEdit}>Update repair</Button><Button variant="danger" loading={deleting} onClick={onDelete}>Delete repair</Button></div></CardBody></Card>;}

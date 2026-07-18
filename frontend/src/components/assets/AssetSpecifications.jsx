@@ -1,0 +1,3 @@
+import{Card,CardBody,CardHeader}from"../../design-system";
+const Item=({label,value})=><div><dt>{label}</dt><dd>{value||"Not recorded"}</dd></div>;
+export default function AssetSpecifications({asset}){return <Card><CardHeader title="Technical specifications"/><CardBody><dl className="asset-detail-grid"><Item label="Brand" value={asset.brand}/><Item label="Model" value={asset.model}/><Item label="Product year" value={asset.productYear}/><Item label="Generation" value={asset.generation}/><Item label="Processor"/><Item label="RAM"/><Item label="Storage"/><Item label="Operating system"/><Item label="Other details" value={asset.notes}/></dl></CardBody></Card>;}

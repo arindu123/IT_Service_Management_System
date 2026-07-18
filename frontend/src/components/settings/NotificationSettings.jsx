@@ -1,0 +1,1 @@
+import{AlertBanner,Card}from"../../design-system";export default function NotificationSettings(){return <Card><h2>Notification Preferences</h2><AlertBanner tone="info" title="Managed by the system">Request notifications follow the existing workflow. Per-user notification preferences are not supported by the current API.</AlertBanner></Card>}

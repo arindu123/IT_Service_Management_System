@@ -8,6 +8,8 @@ import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
 import Users from "./pages/Users";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 
@@ -154,6 +156,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/reports" element={<ProtectedRoute roles={["admin", "system_admin", "head_of_it"]}><Reports /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute roles={["admin", "system_admin", "head_of_it"]}><Settings /></ProtectedRoute>} />
 
       <Route
         path="/network"
