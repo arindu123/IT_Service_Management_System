@@ -17,6 +17,11 @@ const CHECK_METHODS = new Set(["icmp", "tcp", "http", "https"]);
 const DEVICE_STATUSES = new Set(["unknown", "online", "warning", "offline", "paused"]);
 
 const normalizeText = (value) => (value === undefined || value === null ? "" : String(value).trim());
+const normalizeBoundedText = (value, field, max) => {
+  const text = normalizeText(value);
+  if (text.length > max) throw new Error(`${field} must be ${max} characters or fewer`);
+  return text;
+};
 
 const parseInteger = (value, field, min, max) => {
   const numberValue = Number(value);
@@ -139,15 +144,15 @@ const normalizeNetworkDevicePayload = (payload, currentDevice = null) => {
       : Boolean(payload.monitoringEnabled);
 
   const normalized = {
-    name,
-    hostname: normalizeText(payload.hostname ?? currentDevice?.hostname),
+    name: normalizeBoundedText(name, "Device name", 100),
+    hostname: normalizeBoundedText(payload.hostname ?? currentDevice?.hostname, "Hostname", 100),
     ipAddress,
     deviceType,
-    department: normalizeText(payload.department ?? currentDevice?.department),
-    building: normalizeText(payload.building ?? currentDevice?.building),
-    floor: normalizeText(payload.floor ?? currentDevice?.floor),
-    room: normalizeText(payload.room ?? currentDevice?.room),
-    description: normalizeText(payload.description ?? currentDevice?.description),
+    department: normalizeBoundedText(payload.department ?? currentDevice?.department, "Department", 100),
+    building: normalizeBoundedText(payload.building ?? currentDevice?.building, "Building", 100),
+    floor: normalizeBoundedText(payload.floor ?? currentDevice?.floor, "Floor", 100),
+    room: normalizeBoundedText(payload.room ?? currentDevice?.room, "Room", 100),
+    description: normalizeBoundedText(payload.description ?? currentDevice?.description, "Description", 500),
     monitoringEnabled,
     checkMethod,
     tcpPort: normalizeOptionalPort(payload.tcpPort ?? currentDevice?.tcpPort, checkMethod),

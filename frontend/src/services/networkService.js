@@ -2,7 +2,7 @@ import API from "./apiClient";
 
 const networkService = {
   summary: () => API.get("/network/summary"),
-  devices: (filters = {}) => API.get("/network/devices", { params: { ...filters, limit: 100 } }),
+  devices: (filters = {}) => API.get("/network/devices", { params: { ...filters, page: filters.page || 1, limit: filters.limit || 50 } }),
   incidents: () => API.get("/network/incidents", { params: { status: "open", limit: 5 } }),
   detail: (id) => API.get(`/network/devices/${id}`),
   history: (id, range = "24h") => API.get(`/network/devices/${id}/history`, { params: { range, limit: 30 } }),

@@ -13,6 +13,7 @@ const {
   updateDevice,
 } = require("../controllers/networkController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+const { networkRateLimit } = require("../middleware/securityRateLimit");
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ const VIEW_MONITORING_ROLES = ["admin", "system_admin", "head_of_it", "technicia
 const MANAGE_MONITORING_ROLES = ["admin", "system_admin", "head_of_it", "technician"];
 
 router.use(protect);
+router.use(networkRateLimit);
 
 router.get("/summary", authorizeRoles(...VIEW_MONITORING_ROLES), getSummary);
 router.get("/incidents", authorizeRoles(...VIEW_MONITORING_ROLES), listIncidents);

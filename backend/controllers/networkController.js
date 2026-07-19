@@ -59,8 +59,7 @@ const sendControllerError = (res, error) => {
   }
 
   return res.status(error.statusCode || 500).json({
-    message: error.statusCode ? error.message : "Server error",
-    error: error.statusCode ? undefined : error.message,
+    message: error.statusCode ? error.message : "Unable to process request",
   });
 };
 
