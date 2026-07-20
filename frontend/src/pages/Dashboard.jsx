@@ -72,9 +72,9 @@ function Dashboard() {
 
         {error && !summary && (
           <ErrorState
-            title="Dashboard unavailable"
+            title={t('ui.dashboardUnavailable')}
             message={error}
-            action={<Button variant="secondary" onClick={refreshSummary}>Try again</Button>}
+            action={<Button variant="secondary" onClick={refreshSummary}>{t('ui.tryAgain')}</Button>}
           />
         )}
 
@@ -82,7 +82,7 @@ function Dashboard() {
 
         {model && (
           <div className="dashboard-content" aria-busy={refreshing || undefined}>
-            {error && <ErrorState title="Dashboard refresh failed" message={error} />}
+            {error && <ErrorState title={t('ui.dashboardRefreshFailed')} message={error} />}
             <SystemAlerts model={model} />
             <DashboardStats
               model={model}

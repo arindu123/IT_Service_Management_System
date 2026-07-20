@@ -1,4 +1,39 @@
 import { Input, Select } from "../../design-system";
-const types=[{value:"",label:"All device types"},{value:"pc",label:"PC"},{value:"server",label:"Server"},{value:"printer",label:"Printer"},{value:"router",label:"Router"},{value:"switch",label:"Switch"},{value:"access_point",label:"Access Point"},{value:"cctv_nvr",label:"CCTV / NVR"},{value:"biometric",label:"Biometric"},{value:"other",label:"Other"}];
-const statuses=[{value:"",label:"All statuses"},{value:"online",label:"Online"},{value:"offline",label:"Offline"},{value:"unknown",label:"Unknown"},{value:"warning",label:"Warning"},{value:"paused",label:"Paused"}];
-export default function NetworkFilters({filters,onChange}){const set=(key)=>(event)=>onChange({...filters,[key]:event.target.value});return <section className="network-filters" aria-label="Network device filters"><Input label="Search devices" placeholder="Name, host or IP address" value={filters.search} onChange={set("search")}/><Select label="Status" value={filters.status} onChange={set("status")} options={statuses}/><Select label="Device type" value={filters.deviceType} onChange={set("deviceType")} options={types}/><Input label="Department" value={filters.department} onChange={set("department")}/><Input label="Building" value={filters.building} onChange={set("building")}/></section>}
+import { useTranslation } from "../../i18n/LanguageContext";
+
+const types = [
+  { value: "", labelKey: "networkPage.allDeviceTypes" },
+  { value: "pc", labelKey: "networkPage.pc" },
+  { value: "server", labelKey: "networkPage.server" },
+  { value: "printer", labelKey: "networkPage.printer" },
+  { value: "router", labelKey: "networkPage.router" },
+  { value: "switch", labelKey: "networkPage.switchDevice" },
+  { value: "access_point", labelKey: "networkPage.accessPoint" },
+  { value: "cctv_nvr", labelKey: "networkPage.cctvNvr" },
+  { value: "biometric", labelKey: "networkPage.biometric" },
+  { value: "other", labelKey: "networkPage.other" }
+];
+
+const statuses = [
+  { value: "", labelKey: "networkPage.allStatuses" },
+  { value: "online", labelKey: "networkPage.online" },
+  { value: "offline", labelKey: "networkPage.offline" },
+  { value: "unknown", labelKey: "networkPage.unknownStatus" },
+  { value: "warning", labelKey: "networkPage.warning" },
+  { value: "paused", labelKey: "networkPage.paused" }
+];
+
+export default function NetworkFilters({ filters, onChange }) {
+  const { t } = useTranslation();
+  const set = (key) => (event) => onChange({ ...filters, [key]: event.target.value });
+
+  return (
+    <section className="network-filters" aria-label="Network device filters">
+      <Input label={t('networkPage.searchDevices')} placeholder={t('networkPage.nameHostOrIp')} value={filters.search} onChange={set("search")} />
+      <Select label={t('networkPage.status')} value={filters.status} onChange={set("status")} options={statuses.map(s => ({ ...s, label: t(s.labelKey) }))} />
+      <Select label={t('networkPage.deviceType')} value={filters.deviceType} onChange={set("deviceType")} options={types.map(t2 => ({ ...t2, label: t(t2.labelKey) }))} />
+      <Input label={t('networkPage.department')} value={filters.department} onChange={set("department")} />
+      <Input label={t('networkPage.building')} value={filters.building} onChange={set("building")} />
+    </section>
+  );
+}

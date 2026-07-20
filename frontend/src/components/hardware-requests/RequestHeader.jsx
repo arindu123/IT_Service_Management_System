@@ -1,5 +1,16 @@
 import { Button } from "../../design-system";
+import { useTranslation } from "../../i18n/LanguageContext";
 
 export default function RequestHeader({ onCreate }) {
-  return <header className="request-page-header"><div><p className="request-kicker">Service management</p><h1>Hardware Requests</h1><p>Manage employee hardware requests and workflow status.</p></div><Button onClick={onCreate}>Create Request</Button></header>;
+  const { t } = useTranslation();
+  return (
+    <header className="request-page-header">
+      <div>
+        <p className="request-kicker">{t('requestPage.serviceManagement')}</p>
+        <h1>{t('requestPage.hardwareRequests')}</h1>
+        <p>{t('requestPage.submitTraceableRequest')}</p>
+      </div>
+      <Button onClick={onCreate}>{t('requestPage.createRequest')}</Button>
+    </header>
+  );
 }

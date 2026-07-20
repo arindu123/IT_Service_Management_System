@@ -28,13 +28,13 @@ function Tickets() {
 
   return <Layout><main className="hardware-request-page">
     <RequestHeader onCreate={()=>navigate("/tickets/create")}/>
-    {error&&<ErrorState title="Hardware requests unavailable" message={error}/>} 
+    {error&&<ErrorState title={t('ui.dashboardUnavailable')} message={error}/>} 
     <RequestFilters filters={filters} onChange={setFilters} enumLabel={enumLabel}/>
     <RequestTable requests={filteredRequests} loading={loading} enumLabel={enumLabel} formatDate={formatDate} canManage={canManage} canDelete={(request)=>canManageOwnRequest(request,user)} onOpen={(request)=>navigate(`/tickets/${request._id}`)} onManage={setManagedRequest} onDelete={setDeleteRequest}/>
-    <Modal open={Boolean(managedRequest)} onClose={()=>setManagedRequest(null)} title={managedRequest?`Manage ${managedRequest.ticketId}`:"Manage request"} size="lg">
-      {managedRequest&&<ApprovalPanel key={`${managedRequest._id}-${managedRequest.updatedAt}`} request={managedRequest} enumLabel={enumLabel} loading={actionLoading} canApprove={APPROVAL_ROLES.includes(user.role)} onSave={(payload)=>runUpdate(()=>hardwareRequestService.updateStatus(managedRequest._id,payload),"Workflow updated")} onApprove={(comment)=>runUpdate(()=>hardwareRequestService.acknowledge(managedRequest._id,comment),"Request approved for processing")} onReject={(comment)=>runUpdate(()=>hardwareRequestService.reject(managedRequest._id,comment),"Request rejected")}/>} 
+    <Modal open={Boolean(managedRequest)} onClose={()=>setManagedRequest(null)} title={managedRequest?`${t("common.view")} ${managedRequest.ticketId}`:t("common.view")} size="lg">
+      {managedRequest&&<ApprovalPanel key={`${managedRequest._id}-${managedRequest.updatedAt}`} request={managedRequest} enumLabel={enumLabel} loading={actionLoading} canApprove={APPROVAL_ROLES.includes(user.role)} onSave={(payload)=>runUpdate(()=>hardwareRequestService.updateStatus(managedRequest._id,payload),t("tickets.workflowUpdated"))} onApprove={(comment)=>runUpdate(()=>hardwareRequestService.acknowledge(managedRequest._id,comment),t("tickets.requestApproved"))} onReject={(comment)=>runUpdate(()=>hardwareRequestService.reject(managedRequest._id,comment),t("tickets.requestRejected"))}/>} 
     </Modal>
-    <ConfirmationDialog open={Boolean(deleteRequest)} onClose={()=>setDeleteRequest(null)} onConfirm={confirmDelete} danger loading={actionLoading} title="Delete hardware request" message={deleteRequest?`Delete ${deleteRequest.ticketId}? This action cannot be undone.`:""} confirmLabel="Delete request"/>
+    <ConfirmationDialog open={Boolean(deleteRequest)} onClose={()=>setDeleteRequest(null)} onConfirm={confirmDelete} danger loading={actionLoading} title={t("tickets.deleteHardwareRequest")} message={deleteRequest?`${t("tickets.deleteConfirm",{ticketId:deleteRequest.ticketId})}`:""} confirmLabel={t("tickets.deleteRequestConfirmLabel")}/>
   </main></Layout>;
 }
 export default Tickets;

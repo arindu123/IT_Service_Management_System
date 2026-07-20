@@ -1,53 +1,53 @@
 import Layout from "../components/Layout";
-
-const teamMembers = [
-  {
-    name: "Mahesh",
-    role: "IT Department Head",
-    image: "mahesh.jpeg",
-    description: "Oversees IT strategy, infrastructure and service delivery for the organization.",
-    details: ["Planning IT operations", "Coordinating support teams", "Ensuring system uptime"],
-  },
-  {
-    name: "Pradeep Wickramasinghe",
-    role: "Programmer & System Analyst",
-    image: "pradeep.jpeg",
-    description: "Leads IT administration, optimization and security while overseeing strategic IT procurement, technical evaluations, and advanced troubleshooting at Geological Survey & Mines Bureau.",
-    details: [
-      "Advanced troubleshooting & tier-3 escalation",
-      "IT procurement & technical evaluations",
-      "Contract & lifecycle management",
-      "7+ years experience in IT infrastructure"
-    ],
-  },
-{
-    name: "Buddika thilakarathna",
-    role: "Network Hardware & Technical Assistant",
-    image: "buddika.jpeg",
-    description: "Maintains network infrastructure and assists with hardware repairs and upgrades.",
-    details: ["Switch/router support", "Cable management", "Technical assistance"],
-  },
-
-  {
-    name: "Muthupavani Silva",
-    role: "Network Hardware & Technical Assistant",
-    image: "muthu.jpeg",
-    description: "Supports network devices, hardware installation and technical troubleshooting.",
-    details: ["Network setup", "Hardware maintenance", "On-site technical support"],
-  },
-  
-];
+import { useTranslation } from "../i18n/LanguageContext";
 
 function About() {
+  const { t } = useTranslation();
+
+  const teamMembers = [
+    {
+      name: "Mahesh",
+      role: t('about.members.maheshRole'),
+      image: "mahesh.jpeg",
+      description: t('about.members.maheshDescription'),
+      details: [t('about.members.maheshDetail1'), t('about.members.maheshDetail2'), t('about.members.maheshDetail3')],
+    },
+    {
+      name: "Pradeep Wickramasinghe",
+      role: t('about.members.pradeepRole'),
+      image: "pradeep.jpeg",
+      description: t('about.members.pradeepDescription'),
+      details: [
+        t('about.members.pradeepDetail1'),
+        t('about.members.pradeepDetail2'),
+        t('about.members.pradeepDetail3'),
+        t('about.members.pradeepDetail4'),
+      ],
+    },
+    {
+      name: "Buddika thilakarathna",
+      role: t('about.members.priyankaRole'),
+      image: "buddika.jpeg",
+      description: t('about.members.priyankaDescription'),
+      details: [t('about.members.priyankaDetail1'), t('about.members.priyankaDetail2'), t('about.members.priyankaDetail3')],
+    },
+    {
+      name: "Muthupavani Silva",
+      role: t('about.members.muthuRole'),
+      image: "muthu.jpeg",
+      description: t('about.members.muthuDescription'),
+      details: [t('about.members.muthuDetail1'), t('about.members.muthuDetail2'), t('about.members.muthuDetail3')],
+    },
+  ];
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="dashboard-panel p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-600">About Us</p>
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">IT Service Management Team</h1>
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-600">{t('about.eyebrow')}</p>
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">{t('about.title')}</h1>
           <p className="mt-4 max-w-2xl text-slate-600">
-            Our team manages IT service desk operations, asset tracking, helpdesk support and network
-            infrastructure to keep the organization running smoothly.
+            {t('about.description')}
           </p>
         </div>
 

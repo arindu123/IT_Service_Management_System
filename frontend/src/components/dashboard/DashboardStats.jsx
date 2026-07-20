@@ -1,18 +1,20 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../i18n/LanguageContext";
 import StatCard from "./StatCard";
 
 export default function DashboardStats({ model, canViewInventory, canViewNetwork }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const networkValue = model.network.available ? model.network.online : "—";
   return (
     <section aria-labelledby="operational-summary-title">
-      <div className="dashboard-section-title"><div><h2 id="operational-summary-title">Operational summary</h2><p>Current workload and service availability.</p></div></div>
+      <div className="dashboard-section-title"><div><h2 id="operational-summary-title">{t('dashboardPage.operationalSummary')}</h2><p>{t('dashboardPage.currentWorkloadDesc')}</p></div></div>
       <div className="dashboard-stats-grid">
-        <StatCard title="Open Requests" value={model.activeQueue} detail={`${model.tickets.submitted} pending submission(s)`} actionLabel="View requests" onAction={() => navigate("/tickets")} />
-        <StatCard title="Pending Approvals" value={model.pendingApprovals} detail="Requests waiting for administrator action" status={{ status: model.pendingApprovals ? "pending" : "completed" }} actionLabel="Review queue" onAction={() => navigate("/tickets")} />
-        <StatCard title="Active Assets" value={model.activeAssetCount} detail={`${model.activeAssetPercentage}% of ${model.assets.total} registered assets`} actionLabel="View assets" onAction={() => navigate("/assets")} />
-        <StatCard title="Network Status" value={networkValue} detail={model.network.available ? `${model.network.offline} offline of ${model.network.total}` : "Telemetry is not included in the dashboard feed"} status={model.network.available ? { status: model.network.offline ? "offline" : "online" } : { label: "Not reported", tone: "neutral" }} actionLabel="View network" disabled={!canViewNetwork} onAction={() => navigate("/network")} />
-        <StatCard title="Inventory Alerts" value={model.inventory.lowStockCount} detail="Items at or below minimum stock level" status={{ status: model.inventory.lowStockCount ? "low_stock" : "completed" }} actionLabel="View inventory" disabled={!canViewInventory} onAction={() => navigate("/inventory")} />
+        <StatCard title={t('dashboardPage.openRequests')} value={model.activeQueue} detail={`${model.tickets.submitted} ${t('dashboardPage.pendingSubmissions')}`} actionLabel={t('dashboardPage.viewRequests')} onAction={() => navigate("/tickets")} />
+        <StatCard title={t('dashboardPage.pendingApprovals')} value={model.pendingApprovals} detail={t('dashboardPage.requestsWaitingAdmin')} status={{ status: model.pendingApprovals ? "pending" : "completed" }} actionLabel={t('dashboardPage.reviewQueue')} onAction={() => navigate("/tickets")} />
+        <StatCard title={t('dashboardPage.activeAssets')} value={model.activeAssetCount} detail={`${model.activeAssetPercentage}% ${t('ui.of')} ${model.assets.total} ${t('dashboard.registeredAssets')}`} actionLabel={t('dashboardPage.viewAssets')} onAction={() => navigate("/assets")} />
+        <StatCard title={t('dashboardPage.networkStatus')} value={networkValue} detail={model.network.available ? `${model.network.offline} ${t('dashboard.offlineOf')} ${model.network.total}` : t('dashboardPage.telemetryNotIncluded')} status={model.network.available ? { status: model.network.offline ? "offline" : "online" } : { label: t('dashboardPage.notReported'), tone: "neutral" }} actionLabel={t('dashboardPage.viewNetwork')} disabled={!canViewNetwork} onAction={() => navigate("/network")} />
+        <StatCard title={t('dashboardPage.inventoryAlerts')} value={model.inventory.lowStockCount} detail={t('dashboardPage.itemsAtOrBelowMinimum')} status={{ status: model.inventory.lowStockCount ? "low_stock" : "completed" }} actionLabel={t('dashboardPage.viewInventory')} disabled={!canViewInventory} onAction={() => navigate("/inventory")} />
       </div>
     </section>
   );

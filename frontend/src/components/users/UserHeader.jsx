@@ -1,1 +1,15 @@
-export default function UserHeader({ count }) { return <header className="users-header"><div><p className="users-kicker">ADMINISTRATION</p><h1>User Management</h1><p>Manage employee accounts, roles and access status.</p></div><span>{count} registered users</span></header>; }
+import { useTranslation } from "../../i18n/LanguageContext";
+
+export default function UserHeader({ count }) {
+  const { t } = useTranslation();
+  return (
+    <header className="users-header">
+      <div>
+        <p className="users-kicker">{t('userPage.administration')}</p>
+        <h1>{t('userPage.title')}</h1>
+        <p>{t('userPage.description')}</p>
+      </div>
+      <span>{t('userPage.registeredUsers', { count })}</span>
+    </header>
+  );
+}

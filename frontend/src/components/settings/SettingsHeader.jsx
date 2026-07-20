@@ -1,1 +1,12 @@
-export default function SettingsHeader(){return <header className="settings-header"><p>SYSTEM CONFIGURATION</p><h1>Settings</h1><span>Review account preferences and security options supported by this portal.</span></header>}
+import { useTranslation } from "../../i18n/LanguageContext";
+
+export default function SettingsHeader() {
+  const { t } = useTranslation();
+  return (
+    <header className="settings-header">
+      <p>{t('settingsPage.systemConfiguration')}</p>
+      <h1>{t('settingsPage.title')}</h1>
+      <span>{t('settingsPage.description')}</span>
+    </header>
+  );
+}

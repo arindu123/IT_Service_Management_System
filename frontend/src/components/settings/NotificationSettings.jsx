@@ -1,1 +1,14 @@
-import{AlertBanner,Card}from"../../design-system";export default function NotificationSettings(){return <Card><h2>Notification Preferences</h2><AlertBanner tone="info" title="Managed by the system">Request notifications follow the existing workflow. Per-user notification preferences are not supported by the current API.</AlertBanner></Card>}
+import { AlertBanner, Card } from "../../design-system";
+import { useTranslation } from "../../i18n/LanguageContext";
+
+export default function NotificationSettings() {
+  const { t } = useTranslation();
+  return (
+    <Card>
+      <h2>{t('settingsPage.notificationPreferences')}</h2>
+      <AlertBanner tone="info" title={t('settingsPage.managedBySystem')}>
+        {t('settingsPage.notificationNote')}
+      </AlertBanner>
+    </Card>
+  );
+}

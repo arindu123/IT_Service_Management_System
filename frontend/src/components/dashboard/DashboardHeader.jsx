@@ -1,16 +1,18 @@
+import { useTranslation } from "../../i18n/LanguageContext";
 import { Button } from "../../design-system";
 
 export default function DashboardHeader({ lastUpdated, refreshing, onRefresh }) {
+  const { t } = useTranslation();
   return (
     <header className="dashboard-page-header">
       <div>
-        <p className="dashboard-kicker">Operations overview</p>
-        <h1>IT Service Management Dashboard</h1>
-        <p>Overview of service requests, assets, inventory and infrastructure status.</p>
+        <p className="dashboard-kicker">{t('dashboardPage.operationalSummary')}</p>
+        <h1>{t('common.appName')}</h1>
+        <p>{t('dashboardPage.currentWorkloadDesc')}</p>
       </div>
       <div className="dashboard-header-actions">
-        <span aria-live="polite">Last updated: {lastUpdated || "Not available"}</span>
-        <Button variant="secondary" loading={refreshing} onClick={onRefresh}>Refresh</Button>
+        <span aria-live="polite">{t('ui.lastUpdated')}: {lastUpdated || t('common.notAvailable')}</span>
+        <Button variant="secondary" loading={refreshing} onClick={onRefresh}>{t('common.refresh')}</Button>
       </div>
     </header>
   );

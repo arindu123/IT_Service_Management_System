@@ -1,1 +1,11 @@
-import{AlertBanner}from"../../design-system";export default function ReportExport(){return <AlertBanner tone="info" title="Export availability">Export is not provided by the current backend API. No client-side or fake export has been enabled.</AlertBanner>}
+import { AlertBanner } from "../../design-system";
+import { useTranslation } from "../../i18n/LanguageContext";
+
+export default function ReportExport() {
+  const { t } = useTranslation();
+  return (
+    <AlertBanner tone="info" title={t('reportsPage.exportAvailability')}>
+      {t('reportsPage.exportNotProvided')}
+    </AlertBanner>
+  );
+}

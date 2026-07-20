@@ -1,1 +1,12 @@
-import{TableEmptyState}from"../../design-system";export default function ReportTable(){return <section className="gov-card"><h2>Report data</h2><TableEmptyState title="Select a report category" description="Detailed report rows will use the corresponding existing module data."/></section>}
+import { Card, TableEmptyState } from "../../design-system";
+import { useTranslation } from "../../i18n/LanguageContext";
+
+export default function ReportTable() {
+  const { t } = useTranslation();
+  return (
+    <Card className="report-table-section">
+      <h2>{t('reportsPage.reportData')}</h2>
+      <TableEmptyState title={t('reportsPage.selectReportCategory')} description={t('reportsPage.reportDataDescription')} />
+    </Card>
+  );
+}

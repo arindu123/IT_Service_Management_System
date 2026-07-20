@@ -1,2 +1,19 @@
 import { Button, Card, CardBody, CardHeader } from "../../design-system";
-export default function RequestActions({ canEdit, loading, onEdit, onDelete, onBack }) { return <Card><CardHeader title="Actions"/><CardBody><div className="request-action-list">{canEdit&&<Button onClick={onEdit}>Update Request</Button>}{canEdit&&<Button variant="danger" loading={loading} onClick={onDelete}>Delete Request</Button>}<Button variant="secondary" onClick={onBack}>Back to Hardware Requests</Button>{!canEdit&&<p>This request can no longer be edited or deleted by the requester.</p>}</div></CardBody></Card>; }
+import { useTranslation } from "../../i18n/LanguageContext";
+
+export default function RequestActions({ canEdit, loading, onEdit, onDelete, onBack }) {
+  const { t } = useTranslation();
+  return (
+    <Card>
+      <CardHeader title={t('requestPage.actionsTitle')} />
+      <CardBody>
+        <div className="request-action-list">
+          {canEdit && <Button onClick={onEdit}>{t('requestPage.updateRequest')}</Button>}
+          {canEdit && <Button variant="danger" loading={loading} onClick={onDelete}>{t('requestPage.deleteRequest')}</Button>}
+          <Button variant="secondary" onClick={onBack}>{t('requestPage.backToHardwareRequests')}</Button>
+          {!canEdit && <p>{t('requestPage.requestCanBeEdited')}</p>}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
