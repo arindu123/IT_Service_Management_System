@@ -1,0 +1,2 @@
+import{ConfirmationDialog}from"../../design-system";import{assetLabel,personLabel}from"./custodyUtils";import{useTranslation}from"../../i18n/LanguageContext";
+export default function ReturnAssetDialog({issue,onClose,onConfirm,loading}){const{t}=useTranslation();return <ConfirmationDialog open={Boolean(issue)} onClose={onClose} onConfirm={onConfirm} loading={loading} title={t('custodyPage.returnAsset')} message={issue?t('custodyPage.confirmReturnMsg'):""} confirmLabel={t('custodyPage.confirmReturnBtn')}/>;}

@@ -1,0 +1,2 @@
+import{Button}from"../../design-system";import{useTranslation}from"../../i18n/LanguageContext";
+export default function CustodyHeader({onIssue,onAssets}){const{t}=useTranslation();return <header className="custody-page-header"><div><p className="custody-kicker">{t('custodyPage.assetResponsibility')}</p><h1>{t('custodyPage.assetCustodyRecords')}</h1><p>{t('custodyPage.trackAndManage')}</p></div><div><Button variant="secondary" onClick={onAssets}>{t('custodyPage.assetRegister')}</Button><Button onClick={onIssue}>{t('custodyPage.issueAsset')}</Button></div></header>;}

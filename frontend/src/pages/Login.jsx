@@ -4,13 +4,15 @@ import API from "../services/api";
 import { Alert, Button } from "../components/ui";
 import { useTranslation } from "../i18n/LanguageContext";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
+import { useAuth } from "../auth/AuthContext";
 
 function Login() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { establishSession } = useAuth();
 
-  const [employeeId, setEmployeeId] = useState("001");
-  const [password, setPassword] = useState("123456");
+  const [employeeId, setEmployeeId] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,8 +28,7 @@ function Login() {
         password,
       });
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      establishSession(response.data.token, response.data.user);
 
       navigate("/dashboard");
     } catch (err) {
@@ -43,24 +44,21 @@ function Login() {
         <div className="grid w-full overflow-hidden rounded-[22px] bg-[#f8fbff] p-5 shadow-[0_24px_70px_rgba(17,24,39,0.14)] lg:min-h-[760px] lg:grid-cols-[0.78fr_1.22fr] lg:gap-8 lg:p-7">
           <section className="flex min-h-[620px] flex-col px-3 py-5 sm:px-8 lg:px-9 lg:py-8">
             <div className="flex items-center gap-3">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#1257ff] text-xs font-black text-white">
-                GS
-              </div>
-              <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-[#c8d8ff] bg-[#eaf1ff] px-3.5 py-1.5">
-                <span className="text-sm font-black tracking-tight text-slate-950">{t("common.brand")}</span>
-                <span className="h-4 w-px bg-[#b7c8f6]" aria-hidden="true" />
-                <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#1257ff]">
-                  {t("common.itDepartment")}
-                </span>
+              <div className="inline-flex max-w-full items-center whitespace-nowrap rounded-full border border-[#c8d8ff] bg-[#eaf1ff] px-4 py-2">
+                <span className="text-sm font-black tracking-tight text-slate-950">{t("common.brand")} <span className="text-[#1257ff]">{t("common.itDepartment")}</span></span>
               </div>
               <LanguageSwitcher className="auth-language-switcher" />
             </div>
 
             <div className="my-auto w-full max-w-[370px]">
-              <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="h-1 w-10 rounded-full bg-[#1257ff]" />
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-[#1257ff]">Secure staff access</span>
+              </div>
+              <h1 className="text-4xl font-black leading-[1.08] tracking-[-0.035em] text-[#101b3d] sm:text-[44px]">
                 {t("auth.loginTitle")}
               </h1>
-              <p className="mt-3 text-base font-medium text-slate-700">
+              <p className="mt-5 max-w-[340px] border-l-2 border-[#c8d8ff] pl-4 text-[15px] font-semibold leading-7 text-slate-600">
                 {t("auth.loginDescription")}
               </p>
 

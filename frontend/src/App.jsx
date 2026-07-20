@@ -8,6 +8,10 @@ import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import MyAccount from "./pages/MyAccount";
 import Users from "./pages/Users";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
+import Unauthorized from "./pages/Unauthorized";
+import NotFound from "./pages/NotFound";
 
 import Assets from "./pages/Assets";
 import AddAsset from "./pages/AddAsset";
@@ -20,11 +24,13 @@ import TicketDetail from "./pages/TicketDetail";
 import Inventory from "./pages/Inventory";
 import AddInventory from "./pages/AddInventory";
 
+import NetworkMonitoring from "./pages/NetworkMonitoring";
+
 import Repairs from "./pages/Repairs";
 import CreateRepair from "./pages/CreateRepair";
 
 import ProtectedRoute from "./components/ProtectedRoute";
-import { IT_INVENTORY_ROLES } from "./utils/roles";
+import { IT_INVENTORY_ROLES, NETWORK_MONITORING_VIEW_ROLES } from "./utils/roles";
 
 function Home() {
   return <Navigate to="/login" />;
@@ -38,6 +44,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
 
       <Route
         path="/about"
@@ -149,6 +156,17 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/reports" element={<ProtectedRoute roles={["admin", "system_admin", "head_of_it"]}><Reports /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute roles={["admin", "system_admin", "head_of_it"]}><Settings /></ProtectedRoute>} />
+
+      <Route
+        path="/network"
+        element={
+          <ProtectedRoute roles={NETWORK_MONITORING_VIEW_ROLES}>
+            <NetworkMonitoring />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/repairs"
@@ -176,6 +194,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

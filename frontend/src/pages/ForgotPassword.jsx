@@ -57,6 +57,11 @@ function ForgotPassword() {
     setRequestingMethod(method);
 
     try {
+      if (method === "email") {
+        const response = await API.post("/auth/forgot-password", { employeeId: employeeId.trim() });
+        setMessage(response.data.message);
+        return;
+      }
       const response = await API.post("/auth/password-reset/request", {
         employeeId: employeeId.trim(),
         method,
@@ -180,7 +185,7 @@ function ForgotPassword() {
                   <button
                     type="button"
                     onClick={() => handleRequest("email")}
-                    disabled={!lookup.emailResetConfigured || Boolean(requestingMethod)}
+                    disabled={!lookup.emailResetConfigured || !lookup.user?.emailMasked || Boolean(requestingMethod)}
                     className="rounded-[18px] border border-slate-200 bg-white p-4 text-left transition hover:border-[#1257ff] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="block text-sm font-black text-slate-950">

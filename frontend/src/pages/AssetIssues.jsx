@@ -1,75 +1,10 @@
-import { useEffect, useState } from "react";
-import API from "../services/api";
-import Layout from "../components/Layout";
-import { Alert, Badge, Button, DataTable, EmptyRow, FormActions, FormPanel, PageHeader } from "../components/ui";
-
-function AssetIssues() {
-  const [issues, setIssues] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ userId: "", itemId: "", issueDate: new Date().toISOString().slice(0, 10), notes: "" });
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const token = localStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const load = async () => {
-    try {
-      const [issueResponse, userResponse, itemResponse] = await Promise.all([
-        API.get("/asset-issues", { headers }),
-        API.get("/auth/users", { headers }),
-        API.get("/assets", { headers }),
-      ]);
-      setIssues(issueResponse.data.issues || []);
-      setUsers(userResponse.data.users || []);
-      setItems(itemResponse.data.assets || []);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load issue records");
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const submit = async (event) => {
-    event.preventDefault();
-    setSaving(true); setError("");
-    try {
-      await API.post("/asset-issues", form, { headers });
-      setForm({ userId: "", itemId: "", issueDate: new Date().toISOString().slice(0, 10), notes: "" });
-      await load();
-    } catch (err) { setError(err.response?.data?.message || "Could not issue item"); }
-    finally { setSaving(false); }
-  };
-
-  const returnItem = async (id) => {
-    try { await API.put(`/asset-issues/${id}/return`, {}, { headers }); await load(); }
-    catch (err) { setError(err.response?.data?.message || "Could not return item"); }
-  };
-
-  const activeItemIds = new Set(issues.filter((issue) => issue.status === "issued").map((issue) => issue.item?._id));
-  const selectedUser = users.find((user) => user._id === form.userId);
-
-  return <Layout>
-    <PageHeader eyebrow="Asset issues" title="Issue an Item" description="Connect a registered user with a registered item." />
-    <FormPanel><Alert message={error} />
-      <form onSubmit={submit} className="form-grid">
-        <Field label="Select User"><select required value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })}><option value="">Select user</option>{users.map((user) => <option key={user._id} value={user._id}>{user.employeeId || user._id} — {user.name} ({user.department || "No department"})</option>)}</select></Field>
-        <Field label="User ID"><input value={selectedUser?.employeeId || selectedUser?._id || ""} placeholder="Auto-filled after selecting a user" disabled /></Field>
-        <Field label="User Name"><input value={selectedUser?.name || ""} placeholder="Auto-filled after selecting a user" disabled /></Field>
-        <Field label="Department"><input value={selectedUser?.department || ""} placeholder="Auto-filled after selecting a user" disabled /></Field>
-        <Field label="Ministry"><input value={selectedUser?.ministry || ""} placeholder="Auto-filled after selecting a user" disabled /></Field>
-        <Field label="Item ID"><select required value={form.itemId} onChange={(e) => setForm({ ...form, itemId: e.target.value })}><option value="">Select item</option>{items.filter((item) => !activeItemIds.has(item._id)).map((item) => <option key={item._id} value={item._id}>{item.itemNumber || item.assetId} — {item.brand} {item.model}</option>)}</select></Field>
-        <Field label="Issue Date"><input required type="date" value={form.issueDate} onChange={(e) => setForm({ ...form, issueDate: e.target.value })} /></Field>
-        <Field label="Notes"><input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Optional" /></Field>
-        <FormActions><Button type="submit" disabled={saving}>{saving ? "Saving..." : "Issue Item"}</Button></FormActions>
-      </form>
-    </FormPanel>
-    <div className="mt-8"><DataTable metric={`${issues.length} records`} emptyLabel="Issue Records" emptyMessage="No item issues recorded yet." columns={["User ID", "User Name", "Department", "Ministry", "Item Number", "Item", "Issue Date", "Status", "Action"]}>
-      {issues.length === 0 ? <EmptyRow colSpan="9" message="No item issues recorded yet." /> : issues.map((issue) => <tr key={issue._id}>
-        <td>{issue.user?.employeeId || issue.user?._id || "--"}</td><td>{issue.user?.name || "Deleted user"}</td><td>{issue.user?.department || "--"}</td><td>{issue.user?.ministry || "--"}</td><td>{issue.item?.itemNumber || "--"}</td><td>{issue.item ? `${issue.item.brand} ${issue.item.model}` : "Deleted item"}</td><td>{new Date(issue.issueDate).toLocaleDateString()}</td><td><Badge tone={issue.status === "issued" ? "blue" : "green"}>{issue.status}</Badge></td><td>{issue.status === "issued" && <Button type="button" variant="secondary" onClick={() => returnItem(issue._id)}>Return</Button>}</td>
-      </tr>)}
-    </DataTable></div>
-  </Layout>;
+import{useEffect,useMemo,useState}from"react";import{useNavigate}from"react-router-dom";import Layout from"../components/Layout";import CustodyDetails from"../components/asset-custody/CustodyDetails";import CustodyFilters from"../components/asset-custody/CustodyFilters";import CustodyHeader from"../components/asset-custody/CustodyHeader";import CustodyTable from"../components/asset-custody/CustodyTable";import IssueAssetDialog from"../components/asset-custody/IssueAssetDialog";import ReturnAssetDialog from"../components/asset-custody/ReturnAssetDialog";import TransferAssetDialog from"../components/asset-custody/TransferAssetDialog";import{assetLabel}from"../components/asset-custody/custodyUtils";import{ConfirmationDialog,ErrorState,Textarea,useToast}from"../design-system";import assetService from"../services/assetService";import{useTranslation}from"../i18n/LanguageContext";import"../components/asset-custody/custody.css";
+function AssetIssues(){const navigate=useNavigate();const{formatDate,formatDateTime,t}=useTranslation();const{toast}=useToast();const[issues,setIssues]=useState([]);const[users,setUsers]=useState([]);const[assets,setAssets]=useState([]);const[filters,setFilters]=useState({search:"",status:""});const[loading,setLoading]=useState(true);const[saving,setSaving]=useState(false);const[error,setError]=useState("");const[issueOpen,setIssueOpen]=useState(false);const[selected,setSelected]=useState(null);const[returnTarget,setReturnTarget]=useState(null);const[transferTarget,setTransferTarget]=useState(null);const[destroyTarget,setDestroyTarget]=useState(null);const[reason,setReason]=useState("");
+  const load=async()=>{const[records,people,items]=await Promise.all([assetService.listCustody(),assetService.listUsers(),assetService.list()]);setIssues(records);setUsers(people);setAssets(items);};
+  useEffect(()=>{let active=true;Promise.all([assetService.listCustody(),assetService.listUsers(),assetService.list()]).then(([records,people,items])=>{if(active){setIssues(records);setUsers(people);setAssets(items);}}).catch((err)=>{if(active)setError(err.response?.data?.message||t("custodyPage.custodyActionFailed"));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
+  const filtered=useMemo(()=>issues.filter((issue)=>{const term=filters.search.trim().toLowerCase();const searchable=[issue.item?.itemNumber,issue.item?.assetId,issue.item?.serialNumber,issue.item?.brand,issue.item?.model,issue.user?.name,issue.userSnapshot?.name,issue.user?.employeeId,issue.issuedBy?.name,issue.returnedBy?.name,issue.transferredBy?.name].filter(Boolean).join(" ").toLowerCase();return(!term||searchable.includes(term))&&(!filters.status||issue.status===filters.status);}),[filters,issues]);
+  const execute=async(action,message,close)=>{setSaving(true);setError("");try{await action();await load();toast(message,{tone:"success"});close?.();return true;}catch(err){setError(err.response?.data?.message||t("custodyPage.custodyActionFailed"));return false;}finally{setSaving(false);}};
+  const issueAsset=(payload)=>execute(()=>assetService.issue(payload),t("custodyPage.assetIssued"),()=>setIssueOpen(false));const returnAsset=()=>execute(()=>assetService.returnCustody(returnTarget._id),t("custodyPage.assetReturned"),()=>setReturnTarget(null));const transferAsset=(payload)=>execute(()=>assetService.transfer(transferTarget._id,payload),t("custodyPage.assetTransferred"),()=>setTransferTarget(null));const destroyAsset=()=>execute(()=>assetService.destroyCustody(destroyTarget._id,reason.trim()),t("custodyPage.assetDestroyedMsg"),()=>{setDestroyTarget(null);setReason("");});
+  return <Layout><main className="enterprise-custody"><CustodyHeader onIssue={()=>setIssueOpen(true)} onAssets={()=>navigate("/assets")}/>{error&&<ErrorState title={t('ui.custodyRecordsUnavailable')} message={error}/>}<CustodyFilters filters={filters} onChange={setFilters}/><CustodyTable issues={filtered} loading={loading} formatDate={formatDate} onView={setSelected} onReturn={setReturnTarget} onTransfer={setTransferTarget} onDestroy={setDestroyTarget}/><IssueAssetDialog open={issueOpen} onClose={()=>setIssueOpen(false)} users={users} assets={assets} issues={issues} loading={saving} onSubmit={issueAsset}/><ReturnAssetDialog issue={returnTarget} onClose={()=>setReturnTarget(null)} onConfirm={returnAsset} loading={saving}/><TransferAssetDialog issue={transferTarget} users={users} onClose={()=>setTransferTarget(null)} onSubmit={transferAsset} loading={saving}/><CustodyDetails issue={selected} open={Boolean(selected)} onClose={()=>setSelected(null)} formatDate={formatDate} formatDateTime={formatDateTime}/><ConfirmationDialog open={Boolean(destroyTarget)} onClose={()=>{setDestroyTarget(null);setReason("");}} onConfirm={destroyAsset} danger loading={saving} title={t("custodyPage.destroyIssuedAsset")} message={<div className="custody-confirm"><p>{t("custodyPage.destroyTarget",{target:destroyTarget?assetLabel(destroyTarget.item):""})}</p><Textarea label={t("ui.reasonOrReference")} required value={reason} onChange={(event)=>setReason(event.target.value)}/></div>} confirmLabel={t("custodyPage.destroyBtn")}/></main></Layout>;
 }
-function Field({ label, children }) { return <div className="field"><label>{label}</label>{children}</div>; }
 export default AssetIssues;

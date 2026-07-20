@@ -1,0 +1,2 @@
+import{Button}from"../../design-system";import{useTranslation}from"../../i18n/LanguageContext";
+export default function AssetHeader({onAdd,onCustody,canManageCustody}){const{t}=useTranslation();return <header className="asset-page-header"><div><p className="asset-kicker">{t('assetPage.assetManagement')}</p><h1>{t('assetPage.itAssetRegister')}</h1><p>{t('assetPage.trackDevices')}</p></div><div>{canManageCustody&&<Button variant="secondary" onClick={onCustody}>{t('assetPage.assetCustody')}</Button>}<Button onClick={onAdd}>{t('assetPage.addAsset')}</Button></div></header>;}

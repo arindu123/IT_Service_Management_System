@@ -1,0 +1,14 @@
+.enterprise-settings{display:grid;gap:24px}
+.settings-header{border-bottom:1px solid var(--gov-color-border);padding-bottom:24px}
+.settings-header p{margin:0;color:var(--gov-color-primary-600);font-size:12px;font-weight:800;letter-spacing:.1em}
+.settings-header h1{margin:5px 0}
+.settings-header span,.settings-note{color:var(--gov-color-text-muted);font-size:13px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.settings-grid .gov-card{display:grid;align-content:start;gap:14px;padding:24px}
+.settings-grid h2{margin:0;font-size:18px}
+.settings-list{display:grid;gap:0}
+.settings-list dt{color:var(--gov-color-text-muted);font-size:13px}
+.settings-list dd{margin:0;font-weight:700;font-size:14px}
+.settings-list .settings-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gov-color-border);padding:10px 0}
+.settings-list .settings-row:last-child{border-bottom:none}
+@media(max-width:700px){.settings-grid{grid-template-columns:1fr}}

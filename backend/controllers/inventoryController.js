@@ -38,7 +38,6 @@ const createInventoryItem = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -55,7 +54,6 @@ const getInventoryItems = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -75,7 +73,6 @@ const getInventoryItemById = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -101,7 +98,6 @@ const updateInventoryItem = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -123,7 +119,6 @@ const deleteInventoryItem = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -142,7 +137,6 @@ const getLowStockItems = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };

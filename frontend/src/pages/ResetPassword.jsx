@@ -33,7 +33,7 @@ function ResetPassword() {
     };
 
     checkToken();
-  }, [token]);
+  }, [t, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,10 +54,10 @@ function ResetPassword() {
     setSaving(true);
 
     try {
-      const response = await API.post("/auth/password-reset/complete", {
-        token,
-        password,
-      });
+      const isEmailToken = /^[a-f0-9]{64}$/i.test(token);
+      const response = isEmailToken
+        ? await API.post(`/auth/reset-password/${encodeURIComponent(token)}`, { newPassword: password, confirmPassword })
+        : await API.post("/auth/password-reset/complete", { token, password });
       setSuccess(response.data.message);
       setPassword("");
       setConfirmPassword("");

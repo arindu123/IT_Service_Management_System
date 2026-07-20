@@ -200,7 +200,6 @@ const createTicket = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -218,7 +217,6 @@ const getTickets = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -235,7 +233,6 @@ const getMyTickets = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -263,7 +260,6 @@ const markMyTicketUpdatesRead = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -295,7 +291,6 @@ const getTicketById = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -365,7 +360,6 @@ const assignTechnician = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -479,7 +473,6 @@ const updateTicketStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -581,7 +574,6 @@ const uploadTicketAttachments = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -632,7 +624,6 @@ const downloadEvidence = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -714,7 +705,6 @@ const deleteEvidence = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -782,7 +772,6 @@ const updateTicket = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -829,7 +818,6 @@ const deleteTicket = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };

@@ -1,16 +1,17 @@
 import { Navigate } from "react-router-dom";
 import { hasRole } from "../utils/roles";
+import { useAuth } from "../auth/AuthContext";
+import { useTranslation } from "../i18n/LanguageContext";
 
 function ProtectedRoute({ children, roles }) {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const { user, status, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
 
-  if (!token) {
-    return <Navigate to="/login" />;
-  }
+  if (status === "validating") return <div className="session-validation" role="status" aria-live="polite">{t('ui.validateSession')}</div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   if (roles?.length && !hasRole(user, roles)) {
-    return <Navigate to="/account" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

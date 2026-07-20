@@ -12,9 +12,12 @@ import {
   priorityTone,
   statusTone,
 } from "../utils/ticketUpdates";
+import { useAuth } from "../auth/AuthContext";
+import { useTranslation } from "../i18n/LanguageContext";
 
 function MyAccount() {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const { user = {} } = useAuth();
+  const { t } = useTranslation();
 
   const [tickets, setTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState("");
@@ -27,25 +30,20 @@ function MyAccount() {
   useEffect(() => {
     const fetchMyTickets = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await API.get("/tickets/mine", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await API.get("/tickets/mine");
 
         const nextTickets = response.data.tickets || [];
         setTickets(nextTickets);
         setSelectedTicketId((currentId) => currentId || nextTickets[0]?._id || "");
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load account requests");
+        setError(err.response?.data?.message || t("myAccountPage.failedToLoad"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchMyTickets();
-  }, []);
+  }, [t]);
 
   const unreadUpdates = useMemo(() => getUnreadTicketUpdates(tickets), [tickets]);
   const allUpdates = useMemo(() => getTicketUpdates(tickets, { includeInitial: true }), [tickets]);
@@ -84,22 +82,13 @@ function MyAccount() {
     setMarkingRead(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await API.put(
-        "/tickets/mine/notifications/read",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await API.put("/tickets/mine/notifications/read", {});
 
       setTickets(response.data.tickets || []);
       window.dispatchEvent(new Event("ticket-notifications-updated"));
-      setSuccess("Request notifications marked as read");
+      setSuccess(t("myAccountPage.markReadSuccess"));
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to mark notifications as read");
+      setError(err.response?.data?.message || t("myAccountPage.markReadFailed"));
     } finally {
       setMarkingRead(false);
     }
@@ -108,9 +97,9 @@ function MyAccount() {
   return (
     <Layout>
       <PageHeader
-        eyebrow="My account"
-        title="My Requests"
-        description="Your submitted hardware requests, latest notifications, and full update history."
+        eyebrow={t('account.eyebrow')}
+        title={t('myAccountPage.myRequests')}
+        description={t('account.description')}
       />
 
       <Alert message={error} />
@@ -123,39 +112,39 @@ function MyAccount() {
       {loading ? (
         <section className="dashboard-panel p-8 text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-500" />
-          <p className="font-semibold text-slate-600">Loading account...</p>
+          <p className="font-semibold text-slate-600">{t('myAccountPage.loadingAccount')}</p>
         </section>
       ) : (
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="My Requests" value={tickets.length} tone="blue" meta="Submitted by you" />
-            <StatCard label="New Updates" value={unreadUpdates.length} tone="amber" meta="Unread notifications" />
-            <StatCard label="Open Requests" value={openRequestCount} tone="green" meta="Still in workflow" />
+            <StatCard label={t('myAccountPage.myRequests')} value={tickets.length} tone="blue" meta={t('myAccountPage.submittedByYou')} />
+            <StatCard label={t('myAccountPage.newUpdates')} value={unreadUpdates.length} tone="amber" meta={t('myAccountPage.unreadNotifications')} />
+            <StatCard label={t('myAccountPage.openRequests')} value={openRequestCount} tone="green" meta={t('myAccountPage.stillInWorkflow')} />
           </div>
 
           <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[0.85fr_1.15fr]">
             <section className="dashboard-panel p-5">
               <div className="mb-4 border-b border-slate-100 pb-4">
-                <p className="page-eyebrow mb-1">Profile</p>
-                <h3 className="text-lg font-black text-slate-950">{user.name || "Current User"}</h3>
+                <p className="page-eyebrow mb-1">{t('myAccountPage.profile')}</p>
+                <h3 className="text-lg font-black text-slate-950">{user.name || t('myAccountPage.currentUser')}</h3>
               </div>
 
               <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                <ProfileItem label="Employee ID" value={user.employeeId || "Not assigned"} />
-                <ProfileItem label="Role" value={formatLabel(user.role || "team")} />
-                <ProfileItem label="Department" value={user.department || "Unassigned"} />
-                <ProfileItem label="Designation" value={user.designation || "Not assigned"} />
-                <ProfileItem label="Email" value={user.email || "Not available"} />
-                <ProfileItem label="Phone" value={user.phone || "Not available"} />
-                <ProfileItem label="Office" value={user.officeLocation || "Not assigned"} />
+                <ProfileItem label={t('myAccountPage.employeeId')} value={user.employeeId || t('common.notAssigned')} />
+                <ProfileItem label={t('myAccountPage.role')} value={formatLabel(user.role || "team")} />
+                <ProfileItem label={t('myAccountPage.department')} value={user.department || t('common.unassigned')} />
+                <ProfileItem label={t('myAccountPage.designation')} value={user.designation || t('common.notAssigned')} />
+                <ProfileItem label={t('myAccountPage.email')} value={user.email || t('common.emailNotAvailable')} />
+                <ProfileItem label={t('myAccountPage.phone')} value={user.phone || t('common.emailNotAvailable')} />
+                <ProfileItem label={t('myAccountPage.office')} value={user.officeLocation || t('common.notAssigned')} />
               </dl>
             </section>
 
             <section className="dashboard-panel p-5">
               <div className="mb-4 flex flex-col justify-between gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
                 <div>
-                  <p className="page-eyebrow mb-1">Notifications</p>
-                  <h3 className="text-lg font-black text-slate-950">Latest Request Updates</h3>
+                  <p className="page-eyebrow mb-1">{t('myAccountPage.notifications')}</p>
+                  <h3 className="text-lg font-black text-slate-950">{t('myAccountPage.latestRequestUpdates')}</h3>
                 </div>
                 <Button
                   type="button"
@@ -163,13 +152,13 @@ function MyAccount() {
                   onClick={handleMarkRead}
                   disabled={markingRead || unreadUpdates.length === 0}
                 >
-                  {markingRead ? "Marking..." : "Mark All Read"}
+                  {markingRead ? t('common.marking') : t('common.markAllRead')}
                 </Button>
               </div>
 
               {unreadUpdates.length === 0 ? (
                 <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-5 text-sm font-semibold text-slate-500">
-                  No new request updates.
+                  {t('myAccountPage.noNewRequestUpdates')}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -190,7 +179,7 @@ function MyAccount() {
                         <Badge tone={statusTone(update.newStatus)}>{formatLabel(update.newStatus)}</Badge>
                       </div>
                       <p className="mt-2 text-xs font-semibold text-slate-500">
-                        {formatDateTime(update.changedAt)} by {getPersonName(update.changedBy)}
+                        {formatDateTime(update.changedAt)} {t('common.by')} {getPersonName(update.changedBy)}
                       </p>
                     </button>
                   ))}
@@ -201,23 +190,23 @@ function MyAccount() {
 
           <section className="filter-panel">
             <div className="field">
-              <label htmlFor="accountRequestSearch">Search My Requests</label>
+              <label htmlFor="accountRequestSearch">{t('myAccountPage.searchMyRequests')}</label>
               <input
                 id="accountRequestSearch"
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="Ticket ID, issue, hardware, status or next action"
+                placeholder={t('myAccountPage.searchPlaceholder')}
               />
             </div>
           </section>
 
           <DataTable
             metric={`${filteredTickets.length} records`}
-            emptyLabel="Submitted Requests"
-            columns={["Request", "Hardware", "Priority", "Status", "Latest Update", "Action"]}
+            emptyLabel={t('myAccountPage.submittedRequests')}
+            columns={[t('labels.request'), t('labels.hardwareCategory'), t('labels.priority'), t('labels.status'), t('myAccountPage.latestRequestUpdates'), t('common.actions')]}
           >
             {filteredTickets.length === 0 ? (
-              <EmptyRow colSpan="6" message="No submitted requests found" />
+              <EmptyRow colSpan="6" message={t('myAccountPage.noSubmittedRequests')} />
             ) : (
               filteredTickets.map((ticket) => {
                 const latestUpdate = getTicketUpdates([ticket], { includeInitial: true })[0];
@@ -227,7 +216,7 @@ function MyAccount() {
                     <td className="min-w-56">
                       <div className="font-black text-slate-950">{ticket.ticketId}</div>
                       <div className="text-xs font-semibold text-slate-500">
-                        Submitted {formatDate(ticket.createdAt)}
+                        {t('common.submittedOn', { date: formatDate(ticket.createdAt) })}
                       </div>
                     </td>
                     <td className="min-w-72">
@@ -244,15 +233,15 @@ function MyAccount() {
                     </td>
                     <td className="min-w-72">
                       <div className="font-semibold text-slate-800">
-                        {latestUpdate ? formatDateTime(latestUpdate.changedAt) : "No update yet"}
+                        {latestUpdate ? formatDateTime(latestUpdate.changedAt) : t('myAccountPage.noUpdateYet')}
                       </div>
                       <div className="max-w-xs truncate text-xs text-slate-500">
-                        {latestUpdate?.comment || ticket.nextAction || "Awaiting update"}
+                        {latestUpdate?.comment || ticket.nextAction || t('myAccountPage.awaitingUpdate')}
                       </div>
                     </td>
                     <td>
                       <Button type="button" variant="secondary" onClick={() => setSelectedTicketId(ticket._id)}>
-                        View
+                        {t('myAccountPage.view')}
                       </Button>
                     </td>
                   </tr>
@@ -264,9 +253,9 @@ function MyAccount() {
           <section className="mt-6 dashboard-panel p-5">
             <div className="mb-4 flex flex-col justify-between gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
               <div>
-                <p className="page-eyebrow mb-1">Update history</p>
+                <p className="page-eyebrow mb-1">{t('labels.updateHistory')}</p>
                 <h3 className="text-lg font-black text-slate-950">
-                  {selectedTicket ? selectedTicket.ticketId : "Select a request"}
+                  {selectedTicket ? selectedTicket.ticketId : t('myAccountPage.selectARequest')}
                 </h3>
               </div>
               {selectedTicket && <Badge tone={statusTone(selectedTicket.status)}>{formatLabel(selectedTicket.status)}</Badge>}
@@ -274,31 +263,31 @@ function MyAccount() {
 
             {!selectedTicket ? (
               <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-5 text-sm font-semibold text-slate-500">
-                Select a request to view its update history.
+                {t('myAccountPage.selectToViewHistory')}
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.85fr_1.15fr]">
                 <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
-                  <p className="text-sm font-black text-slate-900">Current Workflow</p>
+                  <p className="text-sm font-black text-slate-900">{t('myAccountPage.currentWorkflow')}</p>
                   <div className="mt-4 space-y-3 text-sm">
-                    <SummaryRow label="Next action" value={selectedTicket.nextAction || "Not recorded"} />
+                    <SummaryRow label={t('myAccountPage.nextAction')} value={selectedTicket.nextAction || t('myAccountPage.notRecorded')} />
                     <SummaryRow
-                      label="Expected fulfillment"
-                      value={selectedTicket.expectedFulfillmentDate ? formatDate(selectedTicket.expectedFulfillmentDate) : "Pending"}
+                      label={t('myAccountPage.expectedFulfillment')}
+                      value={selectedTicket.expectedFulfillmentDate ? formatDate(selectedTicket.expectedFulfillmentDate) : t('common.pending')}
                     />
                     <SummaryRow
-                      label="Installation schedule"
-                      value={selectedTicket.installationSchedule ? formatDateTime(selectedTicket.installationSchedule) : "Pending"}
+                      label={t('myAccountPage.installationSchedule')}
+                      value={selectedTicket.installationSchedule ? formatDateTime(selectedTicket.installationSchedule) : t('common.pending')}
                     />
                     <SummaryRow
-                      label="Item availability"
-                      value={selectedTicket.itemAvailability ? formatLabel(selectedTicket.itemAvailability) : "Not updated"}
+                      label={t('myAccountPage.itemAvailability')}
+                      value={selectedTicket.itemAvailability ? formatLabel(selectedTicket.itemAvailability) : t('common.notUpdated')}
                     />
                     <SummaryRow
-                      label="Procurement"
-                      value={selectedTicket.procurementStatus ? formatLabel(selectedTicket.procurementStatus) : "Not updated"}
+                      label={t('myAccountPage.procurement')}
+                      value={selectedTicket.procurementStatus ? formatLabel(selectedTicket.procurementStatus) : t('common.notUpdated')}
                     />
-                    <SummaryRow label="Remarks" value={selectedTicket.remarks || "No remarks"} />
+                    <SummaryRow label={t('myAccountPage.remarks')} value={selectedTicket.remarks || t('myAccountPage.noRemarks')} />
                   </div>
                 </div>
 
@@ -308,10 +297,10 @@ function MyAccount() {
                       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                         <div>
                           <p className="text-sm font-black text-slate-950">
-                            {update.comment || update.changeSummary.join(", ") || "Request updated"}
+                            {update.comment || update.changeSummary.join(", ") || t('myAccountPage.requestUpdated')}
                           </p>
                           <p className="mt-1 text-xs font-semibold text-slate-500">
-                            {formatDateTime(update.changedAt)} by {getPersonName(update.changedBy)}
+                            {formatDateTime(update.changedAt)} {t('common.by')} {getPersonName(update.changedBy)}
                             {update.changedBy?.role ? ` (${formatLabel(update.changedBy.role)})` : ""}
                           </p>
                         </div>

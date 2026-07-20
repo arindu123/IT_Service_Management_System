@@ -4,6 +4,7 @@ import API from "../services/api";
 import { Alert, Button } from "../components/ui";
 import { useTranslation } from "../i18n/LanguageContext";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
+import { useAuth } from "../auth/AuthContext";
 
 const registerFields = [
   {
@@ -81,6 +82,7 @@ const registerFields = [
 function Register() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { establishSession } = useAuth();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -115,8 +117,7 @@ function Register() {
     try {
       const response = await API.post("/auth/register", formData);
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      establishSession(response.data.token, response.data.user);
 
       navigate("/dashboard");
     } catch (err) {

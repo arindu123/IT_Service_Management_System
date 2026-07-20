@@ -1,0 +1,1 @@
+import{StatusBadge}from"../../design-system";import{statusLabel}from"./repairUtils";const tones={pending:"warning",in_progress:"info",completed:"success",failed:"danger"};export default function RepairStatus({status}){return <StatusBadge status={status} label={statusLabel(status)} tone={tones[status]||"neutral"}/>;}
