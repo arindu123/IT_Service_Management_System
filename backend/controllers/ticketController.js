@@ -52,6 +52,34 @@ const normalizeDateValue = (value) => {
 
 const normalizeTextValue = (value) => (value === undefined || value === null ? "" : String(value).trim());
 
+const findAssetForRequester = async (assetId, user) => {
+  const value = normalizeTextValue(assetId);
+  if (!value) return null;
+
+  const identityQuery = [{ assignedTo: user._id }];
+  const employeeId = normalizeTextValue(user.employeeId);
+  if (employeeId) {
+    identityQuery.push({ userId: employeeId }, { "assignedUserSnapshot.employeeId": employeeId });
+  }
+
+  const assetIdentityQuery = mongoose.Types.ObjectId.isValid(value)
+    ? { _id: value }
+    : {
+        $or: [
+          { assetId: value },
+          { itemNumber: value },
+          { serialNumber: value },
+        ],
+      };
+
+  return Asset.findOne({
+    $and: [
+      assetIdentityQuery,
+      { $or: identityQuery },
+    ],
+  });
+};
+
 const getRequesterIdentityQuery = (user) => {
   const employeeId = normalizeTextValue(user.employeeId);
 
@@ -148,11 +176,11 @@ const createTicket = async (req, res) => {
     let asset = null;
 
     if (assetId) {
-      asset = await Asset.findOne({ assetId });
+      asset = await findAssetForRequester(assetId, req.user);
 
       if (!asset) {
         return res.status(404).json({
-          message: "Asset not found",
+          message: "Assigned asset not found",
         });
       }
     }

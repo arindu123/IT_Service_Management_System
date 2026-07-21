@@ -1,6 +1,7 @@
 import API from "./apiClient";
 export const assetService={
   async list(){return (await API.get("/assets")).data.assets||[];},
+  async listMyAssigned(){return (await API.get("/assets/my-assigned")).data.assets||[];},
   async get(id){return (await API.get(`/assets/${id}`)).data;},
   async create(payload){return (await API.post("/assets",payload)).data;},
   async update(id,payload){return (await API.put(`/assets/${id}`,payload)).data;},
