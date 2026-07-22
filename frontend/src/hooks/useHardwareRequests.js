@@ -7,7 +7,10 @@ export default function useHardwareRequests(errorMessage = "Failed to load hardw
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(() => hardwareRequestService.list(), []);
+  const load = useCallback(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    return user.role === "department_user" ? hardwareRequestService.listMine() : hardwareRequestService.list();
+  }, []);
   useEffect(() => {
     let active = true;
     load().then((items) => { if (active) { setRequests(items); setError(""); } })

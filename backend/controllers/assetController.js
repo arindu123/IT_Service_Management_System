@@ -114,6 +114,35 @@ const createAsset = async (req, res) => {
   }
 };
 
+// Get assets assigned to the current user
+const getMyAssignedAssets = async (req, res) => {
+  try {
+    const employeeId = String(req.user.employeeId || "").trim();
+    const assignedQuery = employeeId
+      ? {
+          $or: [
+            { assignedTo: req.user._id },
+            { userId: employeeId },
+            { "assignedUserSnapshot.employeeId": employeeId },
+          ],
+        }
+      : { assignedTo: req.user._id };
+
+    const assets = await Asset.find(assignedQuery)
+      .select("itemNumber assetId serialNumber deviceType brand model status location department assignedUserSnapshot")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: assets.length,
+      assets,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 // Get all assets
 const getAssets = async (req, res) => {
   try {
@@ -311,6 +340,7 @@ const deleteAsset = async (req, res) => {
 module.exports = {
   createAsset,
   getAssets,
+  getMyAssignedAssets,
   getAssetById,
   updateAsset,
   destroyAsset,

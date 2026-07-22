@@ -3,6 +3,7 @@ const express = require("express");
 const {
   createAsset,
   getAssets,
+  getMyAssignedAssets,
   getAssetById,
   updateAsset,
   destroyAsset,
@@ -18,6 +19,9 @@ router.use(protect);
 
 // Any signed-in user can register an asset.
 router.post("/", createAsset);
+
+// Get assets assigned to the current user
+router.get("/my-assigned", getMyAssignedAssets);
 
 // Get all assets
 router.get("/", getAssets);

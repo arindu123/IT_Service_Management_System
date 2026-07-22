@@ -2,6 +2,7 @@ import API from "./apiClient";
 
 export const hardwareRequestService = {
   async list() { return (await API.get("/tickets")).data.tickets || []; },
+  async listMine() { return (await API.get("/tickets/mine")).data.tickets || []; },
   async get(id) { return (await API.get(`/tickets/${id}`)).data; },
   async create(payload) { return (await API.post("/tickets", payload)).data.ticket; },
   async update(id, payload) { return (await API.put(`/tickets/${id}/update`, payload)).data.ticket; },
