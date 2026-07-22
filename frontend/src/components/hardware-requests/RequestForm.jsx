@@ -37,6 +37,7 @@ export default function RequestForm({ form, setForm, user, files = [], onFiles, 
   }, [mode]);
 
   const change = (event) => setForm((value) => ({ ...value, [event.target.name]: event.target.value }));
+  const selectedAsset = myAssets.find((asset) => asset._id === form.assetId);
 
   const handleAssetSelect = (event) => {
     const selectedId = event.target.value;
@@ -79,15 +80,9 @@ export default function RequestForm({ form, setForm, user, files = [], onFiles, 
             <h2 className="request-form-section-title">{t('requestPage.requestInformation')}</h2>
           </div>
           <div className="request-form-grid request-form-grid--primary">
-            <Select label={t('requestPage.requestTypeLabel')} required name="requestType" value={form.requestType} onChange={change}>
-              {REQUEST_TYPES.map((value) => <option key={value} value={value}>{enumLabel("requestType", value)}</option>)}
-            </Select>
-            <Select label={t('requestPage.deviceType')} required name="hardwareCategory" value={form.hardwareCategory} onChange={change}>
-              {HARDWARE_CATEGORIES.map((value) => <option key={value} value={value}>{enumLabel("hardwareCategory", value)}</option>)}
-            </Select>
             {mode === "create" && (
               <div className="request-asset-picker">
-                <Select label={t('requestPage.assetTag')} optional name="assetId" value={form.assetId || ""} onChange={handleAssetSelect}>
+                <Select label={t('requestPage.assetTag')} required name="assetId" value={form.assetId || ""} onChange={handleAssetSelect}>
                   <option value="">{assetsLoading ? t('requestPage.loadingIssuedAssets') : t('requestPage.selectIssuedAsset')}</option>
                   {myAssets.map((asset) => (
                     <option key={asset._id} value={asset._id}>
@@ -95,23 +90,22 @@ export default function RequestForm({ form, setForm, user, files = [], onFiles, 
                     </option>
                   ))}
                 </Select>
-                {!assetsLoading && (
-                  <div className="request-issued-assets" aria-live="polite">
-                    {myAssets.length ? myAssets.map((asset) => (
-                      <button
-                        className={form.assetId === asset._id ? "request-issued-asset is-selected" : "request-issued-asset"}
-                        key={asset._id}
-                        type="button"
-                        onClick={() => handleAssetSelect({ target: { value: asset._id } })}
-                      >
-                        <strong>{asset.itemNumber || asset.assetId}</strong>
-                        <span>{asset.brand} {asset.model} | {asset.serialNumber}</span>
-                      </button>
-                    )) : <p>{t('requestPage.noIssuedAssets')}</p>}
+                {!assetsLoading && !myAssets.length && <p className="request-issued-assets-empty">{t('requestPage.noIssuedAssets')}</p>}
+                {selectedAsset && (
+                  <div className="request-issued-asset is-selected" aria-live="polite">
+                    <strong>{selectedAsset.itemNumber || selectedAsset.assetId}</strong>
+                    <span>{selectedAsset.brand} {selectedAsset.model} | {selectedAsset.serialNumber}</span>
+                    <span className="request-issued-asset-selected">Selected</span>
                   </div>
                 )}
               </div>
             )}
+            <Select label={t('requestPage.requestTypeLabel')} required name="requestType" value={form.requestType} onChange={change}>
+              {REQUEST_TYPES.map((value) => <option key={value} value={value}>{enumLabel("requestType", value)}</option>)}
+            </Select>
+            <Select label={t('requestPage.deviceType')} required name="hardwareCategory" value={form.hardwareCategory} onChange={change}>
+              {HARDWARE_CATEGORIES.map((value) => <option key={value} value={value}>{enumLabel("hardwareCategory", value)}</option>)}
+            </Select>
             <Select label={t('requestPage.priority')} name="priority" value={form.priority} onChange={change}>
               {PRIORITIES.map((value) => <option key={value} value={value}>{enumLabel("priority", value)}</option>)}
             </Select>

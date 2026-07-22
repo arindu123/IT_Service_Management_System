@@ -167,9 +167,9 @@ const createTicket = async (req, res) => {
       remarks,
     } = req.body;
 
-    if (!issueDescription || !requestType || !hardwareCategory) {
+    if (!assetId || !issueDescription || !requestType || !hardwareCategory) {
       return res.status(400).json({
-        message: "Request type, hardware category and issue description are required",
+        message: "Asset tag, request type, hardware category and issue description are required",
       });
     }
 
